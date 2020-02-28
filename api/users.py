@@ -7,12 +7,13 @@ import json
 import cgitb
 import cgi
 import sys
+import utils
 cgitb.enable()
 
 class Users(Resource):
 
 	def get(self, userId):
-		try:
+		'''try:
 			dbConnection = pymysql.connect(
 				settings.DB_HOST,
 				settings.DB_USER,
@@ -38,7 +39,9 @@ class Users(Resource):
 			abort(500)
 		finally:
 			cursor.close()
-			dbConnection.close()
+			dbConnection.close()'''
+
+		rows = callDB('getUsers', request.args)
 
 		return make_response(jsonify({'users': rows}), 200)
 
