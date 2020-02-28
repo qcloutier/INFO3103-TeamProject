@@ -57,4 +57,4 @@ def callDB(procedureName, *params):
 		cursor.close()
 		dbConnection.close()
 
-	return make_response(jsonify({'users': rows}), 200)
+	return rows
