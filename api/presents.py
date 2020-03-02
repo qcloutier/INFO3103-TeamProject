@@ -12,7 +12,7 @@ cgitb.enable()
 class Presents(Resource):
 
 	def get(self, userId):
-		try:
+		'''try:
 			dbConnection = pymysql.connect(
 				settings.DB_HOST,
 				settings.DB_USER,
@@ -39,7 +39,20 @@ class Presents(Resource):
 			abort(500)
 		finally:
 			cursor.close()
-			dbConnection.close()
+			dbConnection.close()'''
+
+
+		requestArgs = request.args
+
+		sqlArgs = (
+			userId,
+			requestArgs.get('name'),
+			requestArgs.get('desc'),
+			requestArgs.get('minCost'),
+			requestArgs.get('maxCost'),
+			requestArgs.get('url'))
+
+		rows = callDB('getPresent', sqlArgs)
 
 		return make_response(jsonify({'presents': rows}), 200)
 
@@ -53,7 +66,7 @@ class Presents(Resource):
 		url = request.json['url'];
 		userId = request.json['UserId'];
 
-		try:
+		'''try:
 			dbConnection = pymysql.connect(settings.DB_HOST,
 				settings.DB_USER,
 				settings.DB_PASSWD,
@@ -71,7 +84,10 @@ class Presents(Resource):
 			abort(500)
 		finally:
 			cursor.close()
-			dbConnection.close()
+			dbConnection.close()'''
+
+		sqlArgs = (name, desc, cost, url, userId)
+		callDB('createPresent', sqlArgs)
 
 		pid = row['LAST_INSERT_ID()']
 		return make_response(jsonify( { "pid" : pid } ), 201)
@@ -86,7 +102,7 @@ class Presents(Resource):
 		url = request.json['url'];
 		userId = request.json['UserId'];
 
-		try:
+		'''try:
 			dbConnection = pymysql.connect(settings.DB_HOST,
 				settings.DB_USER,
 				settings.DB_PASSWD,
@@ -104,7 +120,9 @@ class Presents(Resource):
 			abort(500)
 		finally:
 			cursor.close()
-			dbConnection.close()
+			dbConnection.close()'''
+
+		sqlArgs = (name, desc, cost, url, userId)
+		callDB('updatePresent', sqlArgs)
 
 		return make_response('', 204)
-

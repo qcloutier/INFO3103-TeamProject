@@ -12,7 +12,7 @@ cgitb.enable()
 class Present(Resource):
 
 	def get(self, userId, presentId):
-		try:
+		'''try:
 			dbConnection = pymysql.connect(
 				settings.DB_HOST,
 				settings.DB_USER,
@@ -30,12 +30,15 @@ class Present(Resource):
 			abort(500)
 		finally:
 			cursor.close()
-			dbConnection.close()
+			dbConnection.close()'''
+
+		sqlArgs = (userId, presentId)
+		rows = callDB('getPresent', sqlArgs)
 
 		return make_response(jsonify({'presents': rows}), 200)
 
 	def delete(self, presentId):
-		try:
+		'''try:
 			dbConnection = pymysql.connect(
 				settings.DB_HOST,
 				settings.DB_USER,
@@ -55,7 +58,9 @@ class Present(Resource):
 			success = 0
 		finally:
 			cursor.close()
-			dbConnection.close()
+			dbConnection.close()'''
+
+		sqlArgs = (presentId)
+		callDB('deletePresent', sqlArgs)
 
 		return make_response('', 204)
-
