@@ -12,7 +12,7 @@ cgitb.enable()
 class User(Resource):
 
 	def get(self, userId):
-		try:
+		'''try:
 			dbConnection = pymysql.connect(
 				settings.DB_HOST,
 				settings.DB_USER,
@@ -30,12 +30,15 @@ class User(Resource):
 			abort(500)
 		finally:
 			cursor.close()
-			dbConnection.close()
+			dbConnection.close()'''
+
+		sqlArgs = (userId, rowCount)
+		rows = callDB('getUser', sqlArgs)
 
 		return make_response(jsonify({'user': rows}), 200)
 
 	def delete(self, userId):
-		try:
+		'''try:
 			dbConnection = pymysql.connect(
 				settings.DB_HOST,
 				settings.DB_USER,
@@ -54,6 +57,9 @@ class User(Resource):
 			success = 0
 		finally:
 			cursor.close()
-			dbConnection.close()
+			dbConnection.close()'''
+
+		sqlArgs = (userId)
+		callDB('deleteUser', sqlArgs)
 
 		return make_response('', 204)

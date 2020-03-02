@@ -7,12 +7,13 @@ import json
 import cgitb
 import cgi
 import sys
+import utils
 cgitb.enable()
 
 class Users(Resource):
 
 	def get(self, userId):
-		try:
+		'''try:
 			dbConnection = pymysql.connect(
 				settings.DB_HOST,
 				settings.DB_USER,
@@ -38,7 +39,14 @@ class Users(Resource):
 			abort(500)
 		finally:
 			cursor.close()
-			dbConnection.close()
+			dbConnection.close()'''
+
+		sqlArgs = (
+			userId,
+			request.args.get('firstName'),
+			request.args.get('lastName'),
+			request.args.get('dob'))
+		rows = callDB('getUsers', sqlArgs)
 
 		return make_response(jsonify({'users': rows}), 200)
 
@@ -50,8 +58,9 @@ class Users(Resource):
 		firstName = request.json['FirstName'];
 		lastName = request.json['LastName'];
 		dob = request.json['dob'];
+		sqlArgs = (firstName, lastName, dob)
 
-		try:
+		'''try:
 			dbConnection = pymysql.connect(settings.DB_HOST,
 				settings.DB_USER,
 				settings.DB_PASSWD,
@@ -69,6 +78,8 @@ class Users(Resource):
 			abort(500)
 		finally:
 			cursor.close()
-			dbConnection.close()
+			dbConnection.close()'''
+
+		callDB('updateUser', sqlArgs)
 
 		return make_response('', 204)
