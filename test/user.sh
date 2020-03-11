@@ -36,31 +36,37 @@ curl -L "https://info3103.cs.unb.ca:55338/login" \
 
 echo ===== TEST 1 =====
 echo Send a GET request for user1, without authentication.
+echo Expected response: 401
 curl -Li "$ptcl://$host:$port/users/1"
 
 echo ===== TEST 2 =====
 echo Send a GET request for a non-existant user, authenticated as user1.
+echo Expected response: 404
 curl -Li "$ptcl://$host:$port/users/0" \
 	-c testcookie1
 
 echo ===== TEST 3 =====
 echo Send a GET request for user1, authenticated as user1.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users/1" \
 	-c testcookie1
 
 echo ===== TEST 4 =====
 echo Send a GET request for user1, authenticated as user2.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users/1" \
 	-c testcookie2
 
 echo ===== TEST 5 =====
 echo Send a PUT request for user1, without authentication.
+echo Expected response: 401
 curl -Li "$ptcl://$host:$port/users/1" \
 	-H 'Content-Type: application/json' \
 	-X PUT -d '{"first": "Johnathan", "last": "Testificate", "dob": "1900-01-01"}'
 
 echo ===== TEST 6 =====
 echo Send a PUT request for user1, authenticated as user2.
+echo Expected response: 403
 curl -Li "$ptcl://$host:$port/users/1" \
 	-b testcookie2 \
 	-H 'Content-Type: application/json' \
@@ -68,6 +74,7 @@ curl -Li "$ptcl://$host:$port/users/1" \
 
 echo ===== TEST 7 =====
 echo Send a PUT request for a non-existent user, authenticated as user1.
+echo Expected response: 404
 curl -Li "$ptcl://$host:$port/users/0" \
 	-b testcookie1 \
 	-H 'Content-Type: application/json' \
@@ -75,6 +82,7 @@ curl -Li "$ptcl://$host:$port/users/0" \
 
 echo ===== TEST 8 =====
 echo Send a PUT request for user1, authenticated as user1.
+echo Expected response: 204
 curl -Li "$ptcl://$host:$port/users/1" \
 	-b testcookie1 \
 	-H 'Content-Type: application/json' \
@@ -82,23 +90,27 @@ curl -Li "$ptcl://$host:$port/users/1" \
 
 echo ===== TEST 9 =====
 echo Send a DELETE request for user1, without authentication.
+echo Expected response: 401
 curl -Li "$ptcl://$host:$port/users/1" \
 	-X DELETE
 
 echo ===== TEST 10 =====
 echo Send a DELETE request for user1, authenticated as user2.
+echo Expected response: 403
 curl -Li "$ptcl://$host:$port/users/1" \
 	-b testcookie2 \
 	-X DELETE
 
 echo ===== TEST 11 =====
 echo Send a DELETE request for a non-existent user, authenticated as user1.
+echo Expected response: 404
 curl -Li "$ptcl://$host:$port/users/0" \
 	-b testcookie1 \
 	-X DELETE
 
 echo ===== TEST 12 =====
 echo Send a DELETE request for user1, authenticated as user1.
+echo Expected response: 204
 curl -Li "$ptcl://$host:$port/users/1" \
 	-n testcookie1 \
 	-X DELETE

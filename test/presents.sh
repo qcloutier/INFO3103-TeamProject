@@ -1,4 +1,4 @@
-#1/bin/sh
+#!/bin/sh
 #
 # These test cases validate the
 # functionality of the presents endpoint.
@@ -36,6 +36,7 @@ curl -Li "https://info3103.cs.unb.ca:55338/login" \
 
 echo ===== TEST 1 =====
 echo Send a POST request for a non-existent user, authenticated as user1.
+echo Expected response: 404
 curl -Li "$ptcl://$host:$port/users/0/presents" \
 	-b testcookie1 \
 	-H 'Content-Type: application/json' \
@@ -43,12 +44,14 @@ curl -Li "$ptcl://$host:$port/users/0/presents" \
 
 echo ===== TEST 2 =====
 echo Send a POST request for user1, without authentication.
+echo Expected response: 401
 curl -Li "$ptcl://$host:$port/users/1/presents" \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{"name": "present1", "description": "cool", "cost": 5, "url": "www.amazon.ca/aa"}'
 
 echo ===== TEST 3 =====
 echo Send a POST request for user1, authenticated as user2.
+echo Expected response: 403
 curl -Li "$ptcl://$host:$port/users/1/presents" \
 	-b testcookie1 \
 	-H 'Content-Type: application/json' \
@@ -56,6 +59,7 @@ curl -Li "$ptcl://$host:$port/users/1/presents" \
 
 echo ===== TEST 4 =====
 echo Send a POST request with an invalid body for user1, authenticated as user1.
+echo Expected response: 400
 curl -Li "$ptcl://$host:$port/users/1/presents" \
 	-b testcookie1 \
 	-H 'Content-Type: application/json' \
@@ -63,54 +67,62 @@ curl -Li "$ptcl://$host:$port/users/1/presents" \
 
 echo ===== TEST 5 =====
 echo Send a POST request for user1, authenticated as user1.
+echo Expected response: 201
 curl -Li "$ptcl://$host:$port/users/1/presents" \
 	-b testcookie1 \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{"name": "present1", "description": "cool", "cost": 5, "url": "www.amazon.ca/aa"}'
 
-echo ===== TEST 6 =====
-echo Create another present for user1, present2, for use in later test cases.
+echo Creating another present for user1, present2, for use in later test cases...
 curl -Li "$ptcl://$host:$port/users/1/presents" \
 	-b testcookie1 \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{"name": "present2", "description": "rad", "cost": 10, "url": "www.amazon.ca/bb"}'
 
-echo ===== TEST 7 =====
+echo ===== TEST 6 =====
 echo Send a GET request for a non-existent user, authenticated as user1.
+echo Expected response: 404
 curl -Li "$ptcl://$host:$port/users/0/presents" \
 	-b testcookie1
 
-echo ===== TEST 8 =====
+echo ===== TEST 7 =====
 echo Send a GET request for user1, without authentication.
+echo Expected response: 401
 curl -Li "$ptcl://$host:$port/users/1/presents"
 
-echo ===== TEST 9 =====
+echo ===== TEST 8 =====
 echo Send a GET request for user1, authenticated as user1.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users/1/presents" \
 	-b testcookie1
 
-echo ===== TEST 10 =====
+echo ===== TEST 9 =====
 echo Send a GET request for user1, authenticated as user2.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users/1/presents" \
 	-b testcookie2
 
-echo ===== TEST 11 =====
+echo ===== TEST 10 =====
 echo Send a GET request for user1, authenticated as user1, with a query on name.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users/1/presents?name=present2" \
 	-b testcookie1
 
-echo ===== TEST 12 =====
+echo ===== TEST 11 =====
 echo Send a GET request for user1, authenticated as user1, with a query on description.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users/1/presents?description=rad" \
 	-b testcookie1
 
-echo ===== TEST 13 =====
+echo ===== TEST 12 =====
 echo Send a GET request for user1, authenticated as user1, with a query on cost.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users/1/presents?minCost=8&maxCost=12" \
 	-b testcookie1
 
-echo ===== TEST 14 =====
+echo ===== TEST 13 =====
 echo Send a GET request for user1, authenticated as user1, with a query on url.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users/1/presents?url=bb" \
 	-b testcookie1
 

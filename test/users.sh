@@ -18,18 +18,21 @@ read -s -p "Password echo2: " pass2
 
 echo ===== TEST 1 =====
 echo Send a POST request with an invalid body.
+echo Expected response: 400
 curl -Li "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{}'
 
 echo ===== TEST 2 =====
 echo Send a POST request with an invalid username.
+echo Expected response: 404
 curl -Li "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{"first": "John", "last": "Test", "dob": "1995-01-01", "username": "jtest", "password": ""}'
 
 echo ===== TEST 3 =====
 echo Send a POST request with a valid username, but an invalid password.
+echo Expected response: 404
 curl -Li "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{"first": "John", "last": "Test", "dob": "1995-01-01", "username": '"$user1"', "password": ""}'
@@ -37,12 +40,14 @@ curl -Li "$ptcl://$host:$port/users" \
 echo ===== TEST 4 =====
 echo Send a POST request with a valid username and password.
 echo \(This will be user1 in later test cases\)
+echo Expected response: 201
 curl -Li "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{"first": "John", "last": "Test", "dob": "1995-01-01", "username": '"$user1"', "password": '"$pass1"'}'
 
 echo ===== TEST 5 =====
 echo Send another POST request for user1.
+echo Expected response: 400
 curl -Li "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{"first": "John", "last": "Test", "dob": "1995-01-01", "username": '"$user1"', "password": '"$pass1"'}'
@@ -64,25 +69,30 @@ curl -Li "$ptcl://$host:$port/users" \
 
 echo ===== TEST 6 =====
 echo Send a GET request, without authentication.
+echo Expected response: 401
 curl -Li "$ptcl://$host:$port/users"
 
 echo ===== TEST 7 =====
 echo Send a GET request, authenticated as user1.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users" \
 	-c testcookie1
 
 echo ===== TEST 8 =====
 echo Send a GET request, authenticated as user1, with a query on first name.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users?first=duke" \
 	-c testcookie1
 
 echo ===== TEST 9 =====
 echo Send a GET request, authenticated as user1, with a query on last name.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users?first=nuke" \
 	-c testcookie1
 
 echo ===== TEST 10 =====
 echo Send a GET request, authenticated as user1, with a query on date-of-birth.
+echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users?dob=1992" \
 	-c testcookie1
 
