@@ -1,29 +1,17 @@
 #!/usr/bin/env python3
 
-from flask import Flask, jsonify, abort, request, make_response, session
-from flask_restful import reqparse, Resource, Api
-from flask_session import Session
-
-from ldap3 import Server, Connection, ALL
-from ldap3.core.exceptions import *
+from ldap3 import Server, Connection
+from ldap3.core.exceptions import LDAPException
 
 import pymysql.cursors
 
-import json
-import sys
-
 import settings
-
-# Determines if the given user is
-# currently in the Flask session list.
-def isAuthenticated(username):
-	return username in session
 
 # Determines if the given username
 # corresponds to the given user id.
 def isAuthorized(username, uid):
-	user = callDB("get_user", uid)
-	return user.username == username
+	user = callDB("get_user", uid, username)
+	return len(user) == 1
 
 # Asks the LDAP server if the given username and password are valid.
 # Returns nothing on success, and raises an LDAPException on error.
@@ -32,12 +20,9 @@ def callLDAP(username, password):
 
 	try :
 		serv = Server(host=settings.LDAP_HOST)
-		conn = Connection(
-			serv,
-			raise_exceptions=True,
+		conn = Connection(serv, raise_exceptions=True,
 			user='uid='+username+', ou=People,ou=fcs,o=unb',
-			password=password
-		)
+			password=password)
 
 		conn.open()
 		conn.start_tls()
@@ -55,14 +40,9 @@ def callDB(procedure, *args):
 	cur = None
 
 	try:
-		conn = pymysql.connect(
-			settings.DB_HOST,
-			settings.DB_USER,
-			settings.DB_PASSWD,
-			settings.DB_DATABASE,
-			charset='utf8mb4',
-			cursorclass= pymysql.cursors.DictCursor
-		)
+		conn = pymysql.connect(settings.DB_HOST, settings.DB_USER,
+			settings.DB_PASSWD, settings.DB_DATABASE, charset='utf8mb4',
+			cursorclass= pymysql.cursors.DictCursor)
 
 		cur = conn.cursor()
 		cur.callproc(procedure, tuple(args))

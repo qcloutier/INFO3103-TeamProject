@@ -7,6 +7,8 @@ from flask_session import Session
 from ldap3 import Server, Connection, ALL
 from ldap3.core.exceptions import *
 
+from pymysql.err import *
+
 import json
 import sys
 
@@ -38,57 +40,28 @@ class Users(Resource):
 			abort(401)
 
 		try:
-			res = utils.callDB(
-				'create_user',
-				params['username'],
-				params['first_name'],
-				params['last_name'],
-				params['dob']
-			)
+			res = utils.callDB('create_user', params['username'],
+				params['first_name'], params['last_name'], params['dob'])
 
 			userID = res[0]['LAST_INSERT_ID()']
+		except (IntegrityError):
+			abort(403)
 		except:
 			abort(500)
 
-		return make_response(jsonify( { "user_id" : userID } ), 201)
+		return make_response(jsonify({ "user_id" : userID }), 201)
 
 	def get(self):
-		params = (
-			0,
-			"",
-			request.args.get('first_name'),
-			request.args.get('last_name'),
-			request.args.get('dob')
-		)
-
-		rows = callDB('get_user', sqlArgs)
-
-		return make_response(jsonify({'users': rows}), 200)
-
-	def put(self):
-		if not request.json:
-			abort(400)
+		if 'username' not in session:
+			abort(401)
 
 		try:
-			parser = reqparse.RequestParser()
-
-			parser.add_argument('first_name', type=str, required=False)
-			parser.add_argument('last_name', type=str, required=False)
-			parser.add_argument('dob', type=str, required=False)
-
-			params = parser.parse_args()
-		except:
-			abort(400)
-
-		try:
-			res = utils.callDB(
-				'update_user',
-				request.args.get('userID'),
-				params['first_name'],
-				params['last_name'],
-				params['dob']
-			)
+			rows = utils.callDB('get_users', request.args.get('first_name'),
+				request.args.get('last_name'), request.args.get('dob'))
 		except:
 			abort(500)
 
-		return make_response('', 204)
+		print(rows)
+		return make_response(jsonify(rows), 200)
+
+

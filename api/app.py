@@ -25,7 +25,7 @@ app = Flask(__name__)
 app.secret_key = settings.SECRET_KEY
 
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_COOKIE_NAME'] = 'authentication'
+app.config['SESSION_COOKIE_NAME'] = 'Key'
 app.config['SESSION_COOKIE_DOMAIN'] = settings.APP_HOST
 
 @app.errorhandler(400)
