@@ -3,97 +3,118 @@
 # These test cases validate the
 # functionality of the users endpoint.
 #
-# Assumes that the database has no records, and that
-# the login endpoint can be POST'ed successfully.
+# Assumes that the login
+# endpoint works correctly.
 
-ptcl='https'
+ptcl='http'
 host='info3103.cs.unb.ca'
 port='55338'
 
-echo To test, we need two distinct pairs of known valid credentials \(LDAP\).
-read -p "Username echo1: " user1
-read -s -p "Password echo1: " pass1
-read -p "Username echo2: " user2
-read -s -p "Password echo2: " pass2
+echo To test, we need a pair of known valid credentials \(LDAP\).
+echo They must NOT already be registered with the system.
+read -p "Username 1: " user1
+read -s -p "Password 1: " pass1
+echo ''
+read -p "Username 2: " user2
+read -s -p "Password 2: " pass2
+echo ''
 
-echo ===== TEST 1 =====
+printf "\n=> TEST <=\n"
 echo Send a POST request with an invalid body.
 echo Expected response: 400
 curl -Li "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{}'
 
-echo ===== TEST 2 =====
+printf "\n=> TEST <=\n"
 echo Send a POST request with an invalid username.
-echo Expected response: 404
+echo Expected response: 401
 curl -Li "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"first": "John", "last": "Test", "dob": "1995-01-01", "username": "jtest", "password": ""}'
+	-X POST -d '{"first_name": "John", "last_name": "Test", "dob": "1995-01-01", "username": "jtest", "password": ""}'
 
-echo ===== TEST 3 =====
+printf "\n=> TEST <=\n"
 echo Send a POST request with a valid username, but an invalid password.
-echo Expected response: 404
+echo Expected response: 401
 curl -Li "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"first": "John", "last": "Test", "dob": "1995-01-01", "username": '"$user1"', "password": ""}'
+	-X POST -d '{"first_name": "John", "last_name": "Test", "dob": "1995-01-01", "username": "'"$user1"'", "password": ""}'
 
-echo ===== TEST 4 =====
+printf "\n=> TEST <=\n"
 echo Send a POST request with a valid username and password.
-echo \(This will be user1 in later test cases\)
 echo Expected response: 201
-curl -Li "$ptcl://$host:$port/users" \
+resp=$(curl -Li "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"first": "John", "last": "Test", "dob": "1995-01-01", "username": '"$user1"', "password": '"$pass1"'}'
+	-X POST -d '{"first_name": "John", "last_name": "Test", "dob": "1995-01-01", "username": "'"$user1"'", "password": "'"$pass1"'"}')
+echo "$resp"
+uid1=$(printf "$resp" \
+	| grep user_id \
+	| tr -s '[:blank:]' \
+	| cut -d ' ' -f3)
 
-echo ===== TEST 5 =====
+printf "\n=> TEST <=\n"
 echo Send another POST request for user1.
-echo Expected response: 400
+echo Expected response: 403
 curl -Li "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"first": "John", "last": "Test", "dob": "1995-01-01", "username": '"$user1"', "password": '"$pass1"'}'
+	-X POST -d '{"first_name": "John", "last_name": "Test", "dob": "1995-01-01", "username": "'"$user1"'", "password": "'"$pass1"'"}'
 
-echo Registering another test user, user2, for use in later test cases...
-curl -L "$ptcl://$host:$port/users" \
+printf "\n=> SETUP <=\n"
+echo Registering another test user...
+uid2=$(curl -L "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"first": "Duke", "last": "Nuke", "dob": "1992-01-01", "username": '"$user2"', "password": '"$pass2"'}'
+	-X POST -d '{"first_name": "Duke", "last_name": "Nuke", "dob": "1992-01-01", "username": "'"$user2"'", "password": "'"$pass2"'"}' \
+	| grep user_id \
+	| tr -s '[:blank:]' \
+	| cut -d ' ' -f3)
 
-echo Authenticating both test users...
-curl -L "$ptcl://$host:$port/users" \
+printf "\n=> SETUP <=\n"
+echo Authenticating the test users...
+curl -L "$ptcl://$host:$port/login" \
 	-c testcookie1 \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"username": '"$user1"', "password": '"$pass1"'}'
-curl -Li "$ptcl://$host:$port/users" \
+	-X POST -d '{"username": "'"$user1"'", "password": "'"$pass1"'"}'
+curl -L "$ptcl://$host:$port/login" \
 	-c testcookie2 \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"username": '"$user2"', "password": '"$pass2"'}'
+	-X POST -d '{"username": "'"$user2"'", "password": "'"$pass2"'"}'
 
-echo ===== TEST 6 =====
+printf "\n=> TEST <=\n"
 echo Send a GET request, without authentication.
 echo Expected response: 401
 curl -Li "$ptcl://$host:$port/users"
 
-echo ===== TEST 7 =====
+printf "\n=> TEST <=\n"
 echo Send a GET request, authenticated as user1.
 echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users" \
-	-c testcookie1
+	-b testcookie1
 
-echo ===== TEST 8 =====
+printf "\n=> TEST <=\n"
 echo Send a GET request, authenticated as user1, with a query on first name.
 echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users?first=duke" \
-	-c testcookie1
+	-b testcookie1
 
-echo ===== TEST 9 =====
+printf "\n=> TEST <=\n"
 echo Send a GET request, authenticated as user1, with a query on last name.
 echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users?first=nuke" \
-	-c testcookie1
+	-b testcookie1
 
-echo ===== TEST 10 =====
+printf "\n=> TEST <=\n"
 echo Send a GET request, authenticated as user1, with a query on date-of-birth.
 echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users?dob=1992" \
-	-c testcookie1
+	-b testcookie1
+
+printf "\n=> TEARDOWN <=\n"
+echo Deleting the test users...
+curl -L "$ptcl://$host:$port/users/$uid1" \
+	-b testcookie1 \
+	-X DELETE
+curl -L "$ptcl://$host:$port/users/$uid2" \
+	-b testcookie2 \
+	-X DELETE
 
 rm testcookie1 testcookie2

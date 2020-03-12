@@ -11,6 +11,8 @@ CREATE PROCEDURE create_user (
 BEGIN
 	INSERT INTO users (username, first_name, last_name, dob)
 	VALUES (username_in, first_name_in, last_name_in, dob_in);
+
+	SELECT LAST_INSERT_ID();
 END //
 
 DELIMITER ;

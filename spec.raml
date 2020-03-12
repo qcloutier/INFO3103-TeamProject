@@ -1,0 +1,444 @@
+#%RAML 1.0
+title: Present Registry API
+baseUri: info3103.cs.unb.ca/qcloutie/project
+version: v1
+/login:
+  delete:
+    description: |
+      Destroy a registered user's session.
+    responses:
+      204:
+      404:
+        body:
+          application/json:
+            example: |
+              {
+                "msg": "No such session."
+              }
+  post:
+    description: |
+      Create a new session for a registered user.
+    body:
+      application/json:
+        type: |
+          {
+            "type": "object",
+            "$schema": "http://json-schema.org/draft/2019-09/schema",
+            "properties": {
+              "username": { "type": "string" },
+              "password": { "type": "string" }
+            }
+          }
+        example: |
+          {
+            "username": "jsmith",
+            "password": "password1!"
+          }
+    responses:
+      204:
+        headers:
+          Set-Cookie:
+      404:
+        body:
+          application/json:
+            example: |
+              {
+                "msg": "No such user."
+              }
+/users:
+  get:
+    description: |
+      List all registered users.
+      Can filter on given parameters.
+      Accessible to all registered users.
+    queryParameters:
+      first?:
+        description: The first name of a user, or a fragment of it.
+        type: string
+        example: jo
+      last?:
+        description: The last name of a user, or a fragment of it.
+        type: string
+        example: smith
+      dob?:
+        description: The date of birth of a user, or a fragment of it.
+        type: string
+        example: 1970-01
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              [
+                {
+                  "id": 3,
+                  "first": "Bob",
+                  "last": "Smith",
+                  "dob": "1990-12-31"
+                },
+                {
+                  "id": 4,
+                  "first": "Alice",
+                  "last": "Smith",
+                  "dob": "1992-09-01"
+                }
+              ]
+      401:
+        body:
+          application/json:
+            example: |
+              {
+                "msg": "Only registered users can view this."
+              }
+  post:
+    description: |
+      Register a new user with the service.
+      Accessible to everyone.
+    body:
+      application/json:
+        type: |
+          {
+            "type": "object",
+            "$schema": "http://json-schema.org/draft/2019-09/schema",
+            "properties": {
+              "first": { "type": "string" },
+              "last": { "type": "string" },
+              "dob": { "type": "string" },
+              "username": { "type": "string" },
+              "password": { "type": "string" }
+            }
+          }
+        example: |
+          {
+            "first": "John",
+            "last": "Smith",
+            "dob": "1970-01-31",
+            "username": "jsmith",
+            "password": "password1!"
+          }
+    responses:
+      201:
+        body:
+          application/json:
+            example: |
+              {
+                "id": 5
+              }
+  /{user}:
+    description: |
+      Perform actions on a specific user,
+      with an ID number of `{user}`.
+    delete:
+      description: |
+        Delete a user from the service.
+        Accessible to the given user only.
+      responses:
+        204:
+        401:
+          body:
+            application/json:
+              example: |
+                {
+                  "msg": "Only the given user can remove this."
+                }
+        404:
+          body:
+            application/json:
+              example: |
+                {
+                  "msg": "No such user."
+                }
+    get:
+      description: |
+        Get the details for a user.
+        Accessible to all registered users.
+      responses:
+        200:
+          body:
+            application/json:
+              type: |
+                {
+                  "type": "object",
+                  "$schema": "http://json-schema.org/draft/2019-09/schema",
+                  "properties": {
+                    "first": { "type": "string" },
+                    "last": { "type": "string" },
+                    "dob": { "type": "string" }
+                  }
+                }
+              example: |
+                {
+                  "user": {
+                    "first": "John",
+                    "last": "Smith",
+                    "dob": "1970-01-31"
+                  }
+                }
+        401:
+          body:
+            application/json:
+              example: |
+                {
+                  "msg": "Only registered users can view this."
+                }
+        404:
+          body:
+            application/json:
+              example: |
+                {
+                  "msg": "No such user."
+                }
+    put:
+      description: |
+        Modify the details for a user.
+        Accessible to the given user only.
+      body:
+        application/json:
+          type: |
+            {
+              "type": "object",
+              "$schema": "http://json-schema.org/draft/2019-09/schema",
+              "properties": {
+                "first": { "type": "string" },
+                "last": { "type": "string" },
+                "dob": { "type": "string" }
+              }
+            }
+          example: |
+            {
+              "user": {
+                "first": "Johnathon",
+                "last": "Smithsodian",
+                "dob": "2000-02-29"
+              }
+            }
+      responses:
+        204:
+        401:
+          body:
+            application/json:
+              example: |
+                {
+                  "msg": "Only the given user can modify this."
+                }
+        404:
+          body:
+            application/json:
+              example: |
+                {
+                  "msg": "No such user."
+                }
+    /presents:
+      get:
+        description: |
+          List all presents associated with a user.
+          Can filter on given parameters.
+          Accessible by all registered users.
+        queryParameters:
+          name?:
+            description: The name of a present, or a fragment of it.
+            type: string
+            example: some item
+          description?:
+            description: The description of a present, or a fragment of it.
+            type: string
+            example: a cool item
+          mincost?:
+            description: The lower boundary of a range for the cost of a present.
+            type: number
+            example: 10
+          maxcost?:
+            description: The upper boundary of a range for the cost of a present.
+            type: number
+            example: 20
+          url?:
+            description: The URL for a present, or a fragment of it.
+            type: string
+            example: amazon.ca/someitem
+        responses:
+          200:
+            body:
+              application/json:
+                example: |
+                  [
+                    {
+                      "id": 2,
+                      "name": "Some item",
+                      "description": "This is a cool item and I wish I had one!",
+                      "cost": 19.99,
+                      "url": "amazon.ca/someitem"
+                    },
+                    {
+                      "id": 3,
+                      "name": "Some other item",
+                      "description": "This is also a cool item and I wish I had one as well!",
+                      "cost": 24.95,
+                      "url": "amazon.ca/someotheritem"
+                    }
+                  ]
+          401:
+            body:
+              application/json:
+                example: |
+                  {
+                    "msg": "Only registered users can view this."
+                  }
+          404:
+            body:
+              application/json:
+                example: |
+                  {
+                    "msg": "No such user or present."
+                  }
+      post:
+        description: |
+          Add a new present to the present list of a user.
+          Accessible to the given user only.
+        body:
+          application/json:
+            type: |
+              {
+                "type": "object",
+                "$schema": "http://json-schema.org/draft/2019-09/schema",
+                "properties": {
+                  "name": { "type": "string" },
+                  "desc": { "type": "string" },
+                  "cost": { "type": "number" },
+                  "url": { "type": "string" }
+                }
+              }
+            example: |
+              {
+                "present": {
+                  "name": "Yet another item",
+                  "description": "This item is also cool and I really want one!",
+                  "cost": 15.50,
+                  "url": "amazon.ca/yetanotheritem"
+                }
+              }
+        responses:
+          201:
+            body:
+              application/json:
+                example: |
+                  {
+                    "id": "4"
+                  }
+          401:
+            body:
+              application/json:
+                example: |
+                  {
+                    "msg": "Only the given user can create this."
+                  }
+          404:
+            body:
+              application/json:
+                example: |
+                  {
+                    "msg": "No such user."
+                  }
+      /{present}:
+        description: |
+          Perform actions on a specific present,
+          with an ID number of `{present}`.
+        delete:
+          description: |
+            Delete a present from a user.
+            Accessible to the given user only.
+          responses:
+            204:
+            401:
+              body:
+                application/json:
+                  example: |
+                    {
+                      "msg": "Only the given user can remove this."
+                    }
+            404:
+              body:
+                application/json:
+                  example: |
+                    {
+                      "msg": "No such user or present."
+                    }
+        get:
+          description: |
+            Get the details of a present for a user.
+            Accessible to all registered users.
+          responses:
+            200:
+              body:
+                application/json:
+                  type: |
+                    {
+                      "type": "object",
+                      "$schema": "http://json-schema.org/draft/2019-09/schema",
+                      "properties": {
+                        "name": { "type": "string" },
+                        "desc": { "type": "string" },
+                        "cost": { "type": "number" },
+                        "url": { "type": "string" }
+                      }
+                    }
+                  example: |
+                    {
+                      "name": "Yet another item",
+                      "description": "This item is also cool and I really want one!",
+                      "cost": 15.50,
+                      "url": "amazon.ca/yetanotheritem"
+                    }
+            401:
+              body:
+                application/json:
+                  example: |
+                    {
+                      "msg": "Only registered users can view this."
+                    }
+            404:
+              body:
+                application/json:
+                  example: |
+                    {
+                      "msg": "No such user or present."
+                    }
+        put:
+          description: |
+            Modify the details of a present for a user.
+            Accessible to the given user only.
+          body:
+            application/json:
+              type: |
+                {
+                  "type": "object",
+                  "$schema": "http://json-schema.org/draft/2019-09/schema",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "desc": { "type": "string" },
+                    "cost": { "type": "number" },
+                    "url": { "type": "string" }
+                  }
+                }
+              example: |
+                {
+                  "name": "Yet another item (edited)",
+                  "desc": "This item only somewhat cool, but I still want one.",
+                  "cost": 999.99,
+                  "url": "ebay.ca/yetanotheritem"
+                }
+          responses:
+            204:
+            401:
+              body:
+                application/json:
+                  example: |
+                    {
+                      "msg": "Only the given user can modify this."
+                    }
+            404:
+              body:
+                application/json:
+                  example: |
+                    {
+                      "msg": "No such user or present."
+                    }

@@ -6,6 +6,9 @@ CREATE PROCEDURE delete_user (
 	IN user_id_in INT
 )
 BEGIN
+	DELETE FROM presents
+	WHERE user_id = user_id_in;
+
 	DELETE FROM users
 	WHERE user_id = user_id_in;
 END //

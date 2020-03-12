@@ -1,60 +1,61 @@
-import sys
-from flask import Flask, jsonify, abort, request, make_response, session
-from flask_restful import reqparse, Resource, Api
-from flask_session import Session
+#!/usr/bin/env python3
+
+from ldap3 import Server, Connection
+from ldap3.core.exceptions import LDAPException
+
 import pymysql.cursors
-import json
-import cgitb
-import cgi
-import sys
+
 import settings
-#cgitb.enable()
 
-# Authentication:
-#  - check if authenticated
-#  - check if the user matches the user id
-#
-# DB:
-#  - function that takes stored proc name and params, returns map
+# Determines if the given username
+# corresponds to the given user id.
+def isAuthorized(username, uid):
+	user = callDB("get_user", uid, username)
+	return len(user) == 1
 
-# Checks if a user is in the session list of our "server"
-def checkAuthentication(username, session):
-	if username in session:
-		return True
-	return False
+# Asks the LDAP server if the given username and password are valid.
+# Returns nothing on success, and raises an LDAPException on error.
+def callLDAP(username, password):
+	conn = None
 
-# Takes in a username(string) and userId(int), and determines if the User with that ID matches that username
-def checkIfUserMatchesId(username, userId):
-	user = callDB("getUser", (userId))
-	if user.username == username:
-		return True
-	return False
+	try :
+		serv = Server(host=settings.LDAP_HOST)
+		conn = Connection(serv, raise_exceptions=True,
+			user='uid='+username+', ou=People,ou=fcs,o=unb',
+			password=password)
 
+		conn.open()
+		conn.start_tls()
+		conn.bind()
+	except (LDAPException):
+		raise
+	finally:
+		if conn is not None:
+			conn.unbind()
 
-# Takes in a procedureName(string, such as "getUser") and an array of parameters to filter by
-# Note, not sure how to handle determining if we fetchone() or fetchall(), we could have two different functions
-def callDB(procedureName, *params):
+# Runs the given stored procedure with the supplied arguements.
+# Returns a list of tuples of the resulting rows on success.
+def callDB(procedure, *args):
+	conn = None
+	cur = None
+
 	try:
-		dbConnection = pymysql.connect(
-			settings.DB_HOST,
-			settings.DB_USER,
-			settings.DB_PASSWD,
-			settings.DB_DATABASE,
-			charset='utf8mb4',
+		conn = pymysql.connect(settings.DB_HOST, settings.DB_USER,
+			settings.DB_PASSWD, settings.DB_DATABASE, charset='utf8mb4',
 			cursorclass= pymysql.cursors.DictCursor)
 
-		sql = procedureName
-		cursor = dbConnection.cursor()
-	
-		# the * command on the input parameter sends in a list, pack it into a tuple for the procedure
-		sqlArgs = tuple(params)
+		cur = conn.cursor()
+		cur.callproc(procedure, tuple(args))
 
-		cursor.callproc(sql, sqlArgs)
-		rows = cursor.fetchall()
+		res = cur.fetchall()
+
+		conn.commit()
 	except:
-		abort(500)
+		raise
 	finally:
-		cursor.close()
-		dbConnection.close()
+		if cur is not None:
+			cur.close()
+		if conn is not None:
+			conn.close()
 
-	return rows
+	return res

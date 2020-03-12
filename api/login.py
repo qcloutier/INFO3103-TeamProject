@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 
-import sys
 from flask import Flask, jsonify, abort, request, make_response, session
 from flask_restful import reqparse, Resource, Api
 from flask_session import Session
-import json
+
 from ldap3 import Server, Connection, ALL
 from ldap3.core.exceptions import *
+
+import json
+import sys
+
 import settings
-import cgitb
-import cgi
-cgitb.enable()
+import utils
 
 class Login(Resource):
 
@@ -18,61 +19,37 @@ class Login(Resource):
 		if not request.json:
 			abort(400)
 
-		parser = reqparse.RequestParser()
-
 		try:
+			parser = reqparse.RequestParser()
+
 			parser.add_argument('username', type=str, required=True)
 			parser.add_argument('password', type=str, required=True)
-			request_params = parser.parse_args()
+
+			params = parser.parse_args()
 		except:
 			abort(400)
 
-		if request_params['username'] in session:
-			response = {'status': 'success'}
-			responseCode = 200
-		else:
-			try:
-				ldapServer = Server(host=settings.LDAP_HOST)
-				ldapConnection = Connection(ldapServer,
-					raise_exceptions=True,
-					user='uid='+request_params['username']+', ou=People,ou=fcs,o=unb',
-					password = request_params['password'])
-				ldapConnection.open()
-				ldapConnection.start_tls()
-				ldapConnection.bind()
+		try:
+			utils.callLDAP(params['username'], params['password'])
+		except (LDAPException):
+			abort(401)
 
-				dbConnection = pymysql.connect(
-					settings.DB_HOST,
-					settings.DB_USER,
-					settings.DB_PASSWD,
-					settings.DB_DATABASE,
-					charset='utf8mb4',
-					cursorclass= pymysql.cursors.DictCursor)
+		try:
+			rows = utils.callDB('get_user', 0, params['username'])
+		except:
+			abort(500)
 
-				sql = 'getUser'
-				cursor = dbConnection.cursor()
-				requestArgs = request.args
+		if len(rows) == 0:
+			abort(401)
 
-				sqlArgs = (0, request.args.get('username'))
+		session['username'] = params['username']
+		session['user_id'] = rows[0]['user_id']
 
-				cursor.callproc(sql, sqlArgs)
-				row = cursor.fetchone()
-
-				session['username'] = request_params['username']
-				session['id'] = request_params['id']
-				response = {'status': 'success' }
-				responseCode = 201
-			except:
-				response = {'status': 'Access denied'}
-				responseCode = 403
-			finally:
-				ldapConnection.unbind()
-
-		return make_response(jsonify(response), responseCode)
+		return make_response(jsonify({'status': 'Login successful'}), 201)
 
 	def delete(self):
-		if not 'username' in session:
-			abort(400)
+		if 'username' not in session:
+			abort(404)
 
 		session.clear()
 

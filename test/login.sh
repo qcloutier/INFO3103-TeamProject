@@ -3,23 +3,29 @@
 # These test cases validate the
 # functionality of the login endpoint.
 #
-# Assumes that the database has no records, and that
-# the users endpoint can be POST'ed successfully.
+# Assumes that the users and user
+# endpoints are working correctly.
 
-ptcl='https'
+ptcl='http'
 host='info3103.cs.unb.ca'
 port='55338'
 
 echo To test, we need a pair of known valid credentials \(LDAP\).
+echo They must NOT already be registered with the system.
 read -p "Username: " user
 read -s -p "Password: " pass
+echo ''
 
+printf "\n=> SETUP <=\n"
 echo Registering a test user with the system...
-curl -L "$ptcl://$host:$port/user" \
+uid=$(curl -L "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"first": "John", "last": "Test", "dob": "1995-01-01", "username": '"$user"', "password": '"$pass"'}'
+	-X POST -d '{"first_name": "John", "last_name": "Test", "dob": "1995-01-01", "username": "'"$user"'", "password": "'"$pass"'"}' \
+	| grep user_id \
+	| tr -s '[:blank:]' \
+	| cut -d ' ' -f3)
 
-echo ===== TEST 1 =====
+printf "\n=> TEST <=\n"
 echo Send a POST request with an invalid body.
 echo Expected response: 400
 curl -Li "$ptcl://$host:$port/login" \
@@ -27,62 +33,65 @@ curl -Li "$ptcl://$host:$port/login" \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{}'
 
-echo ===== TEST 2 =====
+printf "\n=> TEST <=\n"
 echo Send a POST request with an invalid username.
-echo Expected response: 404
+echo Expected response: 401
 curl -Li "$ptcl://$host:$port/login" \
 	-c testcookie \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{"username": "jtest", "password": "jtest"}'
 
-echo ===== TEST 2 =====
+printf "\n=> TEST <=\n"
 echo Send a POST request with a valid username, but invalid password.
-echo Expected response: 404
+echo Expected response: 401
 curl -Li "$ptcl://$host:$port/login" \
 	-c testcookie \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"username": '"$user"', "password": "jtest"}'
+	-X POST -d '{"username": "'"$user"'", "password": "jtest"}'
 
-echo ===== TEST 3 =====
+printf "\n=> TEST <=\n"
 echo Send a POST request with a valid username and password.
 echo Expected response: 201
 curl -Li "$ptcl://$host:$port/login" \
 	-c testcookie \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"username": '"$user"', "password": '"$pass"'}'
+	-X POST -d '{"username": "'"$user"'", "password": "'"$pass"'"}'
 
-echo ===== TEST 4 =====
+printf "\n=> TEST <=\n"
 echo Send a POST request for a user that already has a session.
 echo Expected response: 201
 curl -Li "$ptcl://$host:$port/login" \
 	-c testcookie \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"username": '"$user"', "password": '"$pass"'}'
+	-X POST -d '{"username": "'"$user"'", "password": "'"$pass"'"}'
 
-echo ===== TEST 5 =====
+printf "\n=> TEST <=\n"
 echo Send a DELETE request without specifying a session.
 echo Expected response: 404
 curl -Li "$ptcl://$host:$port/login" \
 	-X DELETE
 
-echo ===== TEST 6 =====
-echo Send a DELETE request for a non-existent session.
-echo Expected response: 404
-curl -Li "$ptcl://$host:$port/login" \
-	--cookie="auth=00000000-0000-0000-0000-00000000" \
-	-X DELETE
-
-echo ===== TEST 7 =====
+printf "\n=> TEST <=\n"
 echo Send a DELETE request for a valid user that has an active session.
 echo Expected response: 204
 curl -Li "$ptcl://$host:$port/login" \
 	-b testcookie \
 	-X DELETE
 
-echo ===== TEST 8 =====
+printf "\n=> TEST <=\n"
 echo Send a DELETE request for a valid user that does not have an active session.
 echo Expected response: 404
 curl -Li "$ptcl://$host:$port/login" \
+	-b testcookie \
+	-X DELETE
+
+printf "\n=> TEARDOWN <=\n"
+echo Deleting the test user...
+curl -L "$ptcl://$host:$port/login" \
+	-c testcookie \
+	-H 'Content-Type: application/json' \
+	-X POST -d '{"username": "'"$user"'", "password": "'"$pass"'"}'
+curl -L "$ptcl://$host:$port/users/$uid" \
 	-b testcookie \
 	-X DELETE
 
