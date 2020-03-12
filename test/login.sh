@@ -2,9 +2,6 @@
 #
 # These test cases validate the
 # functionality of the login endpoint.
-#
-# Assumes that the database has no records, and that
-# the users endpoint can be POST'ed successfully.
 
 ptcl='http'
 host='info3103.cs.unb.ca'
@@ -15,7 +12,7 @@ read -p "Username: " user
 read -s -p "Password: " pass
 
 echo Registering a test user with the system...
-curl -L "$ptcl://$host:$port/users" \
+curl -Lf "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{"first_name": "John", "last_name": "Test", "dob": "1995-01-01", "username": "'"$user"'", "password": "'"$pass"'"}'
 
