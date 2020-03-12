@@ -3,8 +3,8 @@ DROP PROCEDURE IF EXISTS get_user;
 DELIMITER //
 
 CREATE PROCEDURE get_user (
-	IN user_id_in  INT,
-	IN username_in VARCHAR(20)
+	IN user_id_in    INT,
+	IN username_in   VARCHAR(20)
 )
 BEGIN
 	SELECT * FROM users

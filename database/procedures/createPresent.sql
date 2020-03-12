@@ -12,6 +12,8 @@ CREATE PROCEDURE create_present (
 BEGIN
 	INSERT INTO presents (name, description, cost, url, user_id)
 	VALUES (name_in, description_in, cost_in, url_in, user_id_in);
+
+	SELECT LAST_INSERT_ID();
 END //
 
 DELIMITER ;

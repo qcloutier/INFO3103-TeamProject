@@ -6,7 +6,7 @@
 # Assumes that the database has no records, and that
 # the login and users endpoints can be POST'ed successfully.
 
-ptcl='https'
+ptcl='http'
 host='info3103.cs.unb.ca'
 port='55338'
 
@@ -17,22 +17,22 @@ read -p "Username echo2: " user2
 read -s -p "Password echo2: " pass2
 
 echo Registering the test users...
-curl -Li "https://info3103.cs.unb.ca:55338/user" \
+curl -Li "$ptcl://$host:$port/user" \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"first": "John", "last": "Test", "dob": "1995-01-01", "username": '"$user1"', "password": '"$pass1"'}'
-curl -Li "https://info3103.cs.unb.ca:55338/user" \
+	-X POST -d '{"first": "John", "last": "Test", "dob": "1995-01-01", "username": "'"$user1"'", "password": "'"$pass1"'"}'
+curl -Li "$ptcl://$host:$port/user" \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"first": "Duke", "last": "Test", "dob": "1995-01-01", "username": '"$user2"', "password": '"$pass2"'}'
+	-X POST -d '{"first": "Duke", "last": "Nuke", "dob": "1995-01-01", "username": "'"$user2"'", "password": "'"$pass2"'"}'
 
 echo Authenticating the test users...
-curl -Li "https://info3103.cs.unb.ca:55338/login" \
+curl -Li "$ptcl://$host:$port/login" \
 	-c testcookie1 \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"username": '"$user1"', "password": '"$pass1"'}'
-curl -Li "https://info3103.cs.unb.ca:55338/login" \
+	-X POST -d '{"username": "'"$user1"'", "password": "'"$pass1"'"}'
+curl -Li "$ptcl://$host:$port/login" \
 	-c testcookie2 \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"username": '"$user2"', "password": '"$pass2"'}'
+	-X POST -d '{"username": "'"$user2"'", "password": "'"$pass2"'"}'
 
 echo ===== TEST 1 =====
 echo Send a POST request for a non-existent user, authenticated as user1.

@@ -4,16 +4,13 @@ from flask import Flask, jsonify, abort, request, make_response
 from flask_restful import Resource, Api
 import pymysql.cursors
 import json
-import cgitb
-import cgi
 import sys
-cgitb.enable()
 
 class User(Resource):
 
 	def get(self, userId):
 		'''try:
-			dbConnection = pymysql.connect(
+		dbConnection = pymysql.connect(
 				settings.DB_HOST,
 				settings.DB_USER,
 				settings.DB_PASSWD,

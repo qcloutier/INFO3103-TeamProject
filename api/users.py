@@ -1,85 +1,94 @@
 #!/usr/bin/env python3
 
-from flask import Flask, jsonify, abort, request, make_response
-from flask_restful import Resource, Api
-import pymysql.cursors
+from flask import Flask, jsonify, abort, request, make_response, session
+from flask_restful import reqparse, Resource, Api
+from flask_session import Session
+
+from ldap3 import Server, Connection, ALL
+from ldap3.core.exceptions import *
+
 import json
-import cgitb
-import cgi
 import sys
+
+import settings
 import utils
-cgitb.enable()
 
 class Users(Resource):
 
-	def get(self, userId):
-		'''try:
-			dbConnection = pymysql.connect(
-				settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
+	def post(self):
+		if not request.json:
+			abort(400)
 
-			sql = 'getUsers'
-			cursor = dbConnection.cursor()
-			requestArgs = request.args
+		try:
+			parser = reqparse.RequestParser()
 
-			sqlArgs = (
-				userId,
-				request.args.get('firstName'),
-				request.args.get('lastName'),
-				request.args.get('dob'),
-				rowCount)
+			parser.add_argument('first_name', type=str, required=True)
+			parser.add_argument('last_name', type=str, required=True)
+			parser.add_argument('dob', type=str, required=False)
+			parser.add_argument('username', type=str, required=True)
+			parser.add_argument('password', type=str, required=True)
 
-			cursor.callproc(sql, sqlArgs)
-			rows = cursor.fetchall()
+			params = parser.parse_args()
+		except:
+			abort(400)
+
+		try:
+			utils.callLDAP(params['username'], params['password'])
+		except (LDAPException):
+			abort(401)
+
+		try:
+			res = utils.callDB(
+				'create_user',
+				params['username'],
+				params['first_name'],
+				params['last_name'],
+				params['dob']
+			)
+
+			userID = res[0]['LAST_INSERT_ID()']
 		except:
 			abort(500)
-		finally:
-			cursor.close()
-			dbConnection.close()'''
 
-		sqlArgs = (
-			userId,
-			request.args.get('firstName'),
-			request.args.get('lastName'),
-			request.args.get('dob'))
-		rows = callDB('getUsers', sqlArgs)
+		return make_response(jsonify( { "user_id" : userID } ), 201)
+
+	def get(self):
+		params = (
+			0,
+			"",
+			request.args.get('first_name'),
+			request.args.get('last_name'),
+			request.args.get('dob')
+		)
+
+		rows = callDB('get_user', sqlArgs)
 
 		return make_response(jsonify({'users': rows}), 200)
 
 	def put(self):
-
-		if not request.json or not 'Name' in request.json:
+		if not request.json:
 			abort(400)
 
-		firstName = request.json['FirstName'];
-		lastName = request.json['LastName'];
-		dob = request.json['dob'];
-		sqlArgs = (firstName, lastName, dob)
+		try:
+			parser = reqparse.RequestParser()
 
-		'''try:
-			dbConnection = pymysql.connect(settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
+			parser.add_argument('first_name', type=str, required=False)
+			parser.add_argument('last_name', type=str, required=False)
+			parser.add_argument('dob', type=str, required=False)
 
-			sql = 'updateUser'
-			cursor = dbConnection.cursor()
-			sqlArgs = (firstName, lastName, dob)
-			cursor.callproc(sql,sqlArgs)
-			row = cursor.fetchone()
-			dbConnection.commit()
+			params = parser.parse_args()
+		except:
+			abort(400)
+
+		try:
+			res = utils.callDB(
+				'update_user',
+				request.args.get('userID'),
+				params['first_name'],
+				params['last_name'],
+				params['dob']
+			)
 		except:
 			abort(500)
-		finally:
-			cursor.close()
-			dbConnection.close()'''
-
-		callDB('updateUser', sqlArgs)
 
 		return make_response('', 204)

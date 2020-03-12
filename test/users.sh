@@ -6,15 +6,15 @@
 # Assumes that the database has no records, and that
 # the login endpoint can be POST'ed successfully.
 
-ptcl='https'
+ptcl='http'
 host='info3103.cs.unb.ca'
 port='55338'
 
 echo To test, we need two distinct pairs of known valid credentials \(LDAP\).
-read -p "Username echo1: " user1
-read -s -p "Password echo1: " pass1
-read -p "Username echo2: " user2
-read -s -p "Password echo2: " pass2
+read -p "Username 1: " user1
+read -s -p "Password 1: " pass1
+read -p "Username 2: " user2
+read -s -p "Password 2: " pass2
 
 echo ===== TEST 1 =====
 echo Send a POST request with an invalid body.
