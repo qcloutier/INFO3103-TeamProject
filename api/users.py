@@ -49,19 +49,19 @@ class Users(Resource):
 		except:
 			abort(500)
 
-		return make_response(jsonify({ "user_id" : userID }), 201)
+		return make_response(jsonify({"user_id": userID}), 201)
 
 	def get(self):
 		if 'username' not in session:
 			abort(401)
 
 		try:
-			rows = utils.callDB('get_users', request.args.get('first_name'),
-				request.args.get('last_name'), request.args.get('dob'))
+			rows = utils.callDB('get_users',
+				request.args.get('first_name'),
+				request.args.get('last_name'))
 		except:
 			abort(500)
 
-		print(rows)
 		return make_response(jsonify(rows), 200)
 
 

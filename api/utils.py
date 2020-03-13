@@ -7,12 +7,6 @@ import pymysql.cursors
 
 import settings
 
-# Determines if the given username
-# corresponds to the given user id.
-def isAuthorized(username, uid):
-	user = callDB("get_user", uid, username)
-	return len(user) == 1
-
 # Asks the LDAP server if the given username and password are valid.
 # Returns nothing on success, and raises an LDAPException on error.
 def callLDAP(username, password):

@@ -8,7 +8,7 @@
 
 ptcl='http'
 host='info3103.cs.unb.ca'
-port='55338'
+port='55337'
 
 echo To test, we need a pair of known valid credentials \(LDAP\).
 echo They must NOT already be registered with the system.
@@ -93,19 +93,13 @@ curl -Li "$ptcl://$host:$port/users" \
 printf "\n=> TEST <=\n"
 echo Send a GET request, authenticated as user1, with a query on first name.
 echo Expected response: 200
-curl -Li "$ptcl://$host:$port/users?first=duke" \
+curl -Li "$ptcl://$host:$port/users?first_name=duke" \
 	-b testcookie1
 
 printf "\n=> TEST <=\n"
 echo Send a GET request, authenticated as user1, with a query on last name.
 echo Expected response: 200
-curl -Li "$ptcl://$host:$port/users?first=nuke" \
-	-b testcookie1
-
-printf "\n=> TEST <=\n"
-echo Send a GET request, authenticated as user1, with a query on date-of-birth.
-echo Expected response: 200
-curl -Li "$ptcl://$host:$port/users?dob=1992" \
+curl -Li "$ptcl://$host:$port/users?last_name=nuke" \
 	-b testcookie1
 
 printf "\n=> TEARDOWN <=\n"
