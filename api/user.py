@@ -19,7 +19,7 @@ class User(Resource):
 		if 'username' not in session:
 			abort(401)
 
-		if not utils.isAuthorized(session['username'], userID):
+		if session['user_id'] != userID:
 			abort(403)
 
 		try:
@@ -36,24 +36,24 @@ class User(Resource):
 			abort(401)
 
 		try:
-			rows = callDB('get_user', userID, session['username'])
+			rows = utils.callDB('get_user', userID, '')
 		except:
 			abort(500)
 
-		if len(user) == 0:
+		if len(rows) == 0:
 			abort(404)
 
-		return make_response(jsonify({'user': rows}), 200)
+		return make_response(jsonify(rows), 200)
 
-	def put(self):
+	def put(self, userID):
+		if not request.json:
+			abort(400)
+
 		if 'username' not in session:
 			abort(401)
 
-		if not utils.isAuthorized(session['username'], userID):
+		if session['user_id'] != userID:
 			abort(403)
-
-		if not request.json:
-			abort(400)
 
 		try:
 			parser = reqparse.RequestParser()
