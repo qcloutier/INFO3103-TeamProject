@@ -38,6 +38,8 @@ version: v1
       204:
         headers:
           Set-Cookie:
+      400:
+      401:
       404:
         body:
           application/json:
@@ -60,10 +62,6 @@ version: v1
         description: The last name of a user, or a fragment of it.
         type: string
         example: smith
-      dob?:
-        description: The date of birth of a user, or a fragment of it.
-        type: string
-        example: 1970-01
     responses:
       200:
         body:
@@ -124,6 +122,7 @@ version: v1
               {
                 "id": 5
               }
+      400:
   /{user}:
     description: |
       Perform actions on a specific user,
@@ -139,7 +138,14 @@ version: v1
             application/json:
               example: |
                 {
-                  "msg": "Only the given user can remove this."
+                  "msg": "You must be logged in to do this."
+                }
+        403:
+          body:
+            application/json:
+              example: |
+                {
+                  "msg": "Only the user owner can remove this."
                 }
         404:
           body:
@@ -219,7 +225,14 @@ version: v1
             application/json:
               example: |
                 {
-                  "msg": "Only the given user can modify this."
+                  "msg": "You must be logged in to do this."
+                }
+        401:
+          body:
+            application/json:
+              example: |
+                {
+                  "msg": "Only the user owner can modify this."
                 }
         404:
           body:
@@ -243,18 +256,6 @@ version: v1
             description: The description of a present, or a fragment of it.
             type: string
             example: a cool item
-          mincost?:
-            description: The lower boundary of a range for the cost of a present.
-            type: number
-            example: 10
-          maxcost?:
-            description: The upper boundary of a range for the cost of a present.
-            type: number
-            example: 20
-          url?:
-            description: The URL for a present, or a fragment of it.
-            type: string
-            example: amazon.ca/someitem
         responses:
           200:
             body:
@@ -329,14 +330,14 @@ version: v1
               application/json:
                 example: |
                   {
-                    "msg": "Only the given user can create this."
+                    "msg": "You must be logged in to do this."
                   }
-          404:
+          403:
             body:
               application/json:
                 example: |
                   {
-                    "msg": "No such user."
+                    "msg": "Only the user owner can do this."
                   }
       /{present}:
         description: |
@@ -353,7 +354,14 @@ version: v1
                 application/json:
                   example: |
                     {
-                      "msg": "Only the given user can remove this."
+                      "msg": "You must be logged in to do this."
+                    }
+            403:
+              body:
+                application/json:
+                  example: |
+                    {
+                      "msg": "Only the user owner can remove this."
                     }
             404:
               body:
@@ -433,7 +441,14 @@ version: v1
                 application/json:
                   example: |
                     {
-                      "msg": "Only the given user can modify this."
+                      "msg": "You must be logged in to modify this."
+                    }
+            403:
+              body:
+                application/json:
+                  example: |
+                    {
+                      "msg": "Only the user owner can modify this."
                     }
             404:
               body:
