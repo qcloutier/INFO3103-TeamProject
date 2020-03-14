@@ -1,125 +1,61 @@
 #!/usr/bin/env python3
 
-from flask import Flask, jsonify, abort, request, make_response
-from flask_restful import Resource, Api
+from flask import Flask, jsonify, abort, request, make_response, session
+from flask_restful import reqparse, Resource, Api
+from flask_session import Session
+
 import pymysql.cursors
 import json
 import sys
+from utils import callDB
 
 class Presents(Resource):
 
-	def get(self, userId):
-		'''try:
-			dbConnection = pymysql.connect(
-				settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
+	def get(self, userID):
 
-			sql = 'getPresent'
-			cursor = dbConnection.cursor()
-			requestArgs = request.args
+		#User must be logged in to access
+		if 'username' not in session:
+			abort(401)
 
-			sqlArgs = (
-				userId,
-				requestArgs.get('name'),
-				requestArgs.get('desc'),
-				requestArgs.get('minCost'),
-				requestArgs.get('maxCost'),
-				requestArgs.get('url'))
-
-			cursor.callproc(sql, sqlArgs)
-			rows = cursor.fetchall()
-		except:
-			abort(500)
-		finally:
-			cursor.close()
-			dbConnection.close()'''
-
+		# We need an intermediary call for the user whose presents we want
+		# If the user doesn't exist, 404
+		user = callDB('get_user', userID, '')
+		if len(user) == 0:
+			abort(404)
 
 		requestArgs = request.args
 
-		sqlArgs = (
-			userId,
+		rows = callDB('get_presents',
 			requestArgs.get('name'),
 			requestArgs.get('desc'),
-			requestArgs.get('minCost'),
-			requestArgs.get('maxCost'),
-			requestArgs.get('url'))
+			userID)
 
-		rows = callDB('getPresent', sqlArgs)
+		# Decimal class cannot be serialized, convert to float
+		for row in rows:
+			row['cost'] = float(row['cost'])
 
 		return make_response(jsonify({'presents': rows}), 200)
 
-	def post(self):
-		if not request.json or not 'Name' in request.json:
+	def post(self, userID):
+
+		#User must be logged in to create a present for themself
+		if 'username' not in session:
+			abort(401)
+
+		if session['user_id'] != userID:
+			abort(403)
+
+		if not request.json or not 'name' in request.json:
 			abort(400)
 
-		name = request.json['Name'];
-		desc = request.json['Description'];
-		cost = request.json['Cost'];
+		name = request.json['name'];
+		desc = request.json['description'];
+		cost = request.json['cost'];
 		url = request.json['url'];
-		userId = request.json['UserId'];
+		userId = userID;
 
-		'''try:
-			dbConnection = pymysql.connect(settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
+		rows = callDB('create_present', name, desc, cost, url, userId)
 
-			sql = 'createPresent'
-			cursor = dbConnection.cursor()
-			sqlArgs = (name, desc, cost, url, userId)
-			cursor.callproc(sql,sqlArgs)
-			row = cursor.fetchone()
-			dbConnection.commit()
-		except:
-			abort(500)
-		finally:
-			cursor.close()
-			dbConnection.close()'''
+		pid = rows[0]['LAST_INSERT_ID()']
+		return make_response(jsonify( { "present_id" : pid } ), 201)
 
-		sqlArgs = (name, desc, cost, url, userId)
-		callDB('createPresent', sqlArgs)
-
-		pid = row['LAST_INSERT_ID()']
-		return make_response(jsonify( { "pid" : pid } ), 201)
-
-	def put(self):
-		if not request.json or not 'Name' in request.json:
-			abort(400)
-
-		name = request.json['Name'];
-		desc = request.json['Description'];
-		cost = request.json['Cost'];
-		url = request.json['url'];
-		userId = request.json['UserId'];
-
-		'''try:
-			dbConnection = pymysql.connect(settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
-
-			sql = 'updatePresent'
-			cursor = dbConnection.cursor()
-			sqlArgs = (name, desc, cost, url, userId)
-			cursor.callproc(sql,sqlArgs)
-			row = cursor.fetchone()
-			dbConnection.commit()
-		except:
-			abort(500)
-		finally:
-			cursor.close()
-			dbConnection.close()'''
-
-		sqlArgs = (name, desc, cost, url, userId)
-		callDB('updatePresent', sqlArgs)
-
-		return make_response('', 204)

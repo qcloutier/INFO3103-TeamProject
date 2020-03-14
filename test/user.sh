@@ -8,7 +8,7 @@
 
 ptcl='http'
 host='info3103.cs.unb.ca'
-port='55337'
+port='55338'
 
 echo To test, we need a pair of known valid credentials \(LDAP\).
 echo They must NOT already be registered with the system.

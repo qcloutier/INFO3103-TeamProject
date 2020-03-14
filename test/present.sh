@@ -14,8 +14,10 @@ echo To test, we need two distinct pairs of known valid credentials \(LDAP\).
 echo They must NOT already be registered with the system.
 read -p "Username 1: " user1
 read -s -p "Password 1: " pass1
+printf "\n"
 read -p "Username 2: " user2
 read -s -p "Password 2: " pass2
+printf "\n"
 
 printf "\n=> SETUP <=\n"
 echo Registering the test users with the system...
@@ -27,7 +29,7 @@ uid1=$(curl -L "$ptcl://$host:$port/users" \
 	| cut -d ' ' -f3)
 uid2=$(curl -L "$ptcl://$host:$port/users" \
 	-H 'Content-Type: application/json' \
-	-X POST -d '{"first": "Duke", "last": "Nuke", "dob": "1992-01-01", "username": '"$user2"', "password": '"$pass2"'}' \
+	-X POST -d '{"first_name": "Duke", "last_name": "Nuke", "dob": "1992-01-01", "username": '"$user2"', "password": '"$pass2"'}' \
 	| grep user_id \
 	| tr -s '[:blank:]' \
 	| cut -d ' ' -f3)
@@ -130,7 +132,7 @@ curl -Li "$ptcl://$host:$port/users/$uid1/presents/$pid" \
 printf "\n=> TEST <=\n"
 echo Send a DELETE request for present1, authenticated as user1.
 echo Expected response: 204
-curl -Li "$ptcl://$host:$port/users/$uid/presents/$pid" \
+curl -Li "$ptcl://$host:$port/users/$uid1/presents/$pid" \
 	-b testcookie1 \
 	-X DELETE
 
@@ -143,4 +145,5 @@ curl -L "$ptcl://$host:$port/users/$uid2" \
 	-b testcookie2 \
 	-X DELETE
 
-rm testcookie1 testcookie2
+rm testcookie1 
+#testcookie2

@@ -1,63 +1,93 @@
 #!/usr/bin/env python3
 
-from flask import Flask, jsonify, abort, request, make_response
-from flask_restful import Resource, Api
+from flask import Flask, jsonify, abort, request, make_response, session
+from flask_restful import reqparse, Resource, Api
 import pymysql.cursors
 import json
 import sys
+from utils import callDB
 
 class Present(Resource):
 
-	def get(self, userId, presentId):
-		'''try:
-			dbConnection = pymysql.connect(
-				settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
+	def get(self, userID, presentID):
 
-			sql = 'getPresent'
-			cursor = dbConnection.cursor()
-			sqlArgs = (userId, presentId,)
-			cursor.callproc(sql, sqlArgs)
-			rows = cursor.fetchall()
+		#User must be logged in to access
+		if 'username' not in session:
+			abort(401)
+
+		#Get present with that ID
+		try:
+			rows = callDB('get_present', presentID)
 		except:
 			abort(500)
-		finally:
-			cursor.close()
-			dbConnection.close()'''
 
-		sqlArgs = (userId, presentId)
-		rows = callDB('getPresent', sqlArgs)
+		# If no rows returned, 404
+		if len(rows) == 0:
+			abort(404)
 
-		return make_response(jsonify({'presents': rows}), 200)
+		# Decimal class cannot be serialized, convert to float
+		rows[0]['cost'] = float(rows[0]['cost'])
 
-	def delete(self, presentId):
-		'''try:
-			dbConnection = pymysql.connect(
-				settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
+		return make_response(jsonify(rows), 200)
 
-			sql = 'deletePresent'
-			cursor = dbConnection.cursor()
-			sqlArgs = (presentId,)
-			cursor.callproc(sql, sqlArgs)
-			dbConnection.commit()
-			success = 1
-		except:
-			abort(500)
-			success = 0
-		finally:
-			cursor.close()
-			dbConnection.close()'''
+	def put(self, userID, presentID):
+		# Ensure that name is specified and that json is proper
+		if not request.json or not 'name' in request.json:
+			abort(400)
 
-		sqlArgs = (presentId)
-		callDB('deletePresent', sqlArgs)
+		# Check that user has a session
+		if 'username' not in session:
+			abort(401)
+
+		# Check that session is correct
+		if session['user_id'] != userID:
+			abort(403)
+	
+		# We need an intermediary call for the present the user is updating
+		# If the present doesn't exist, 404
+		present = callDB('get_present', presentID)
+		if len(present) == 0:
+			abort(404)
+
+		# If the present belongs to someone else, 403
+		presentOwnerId = present[0]['user_id']
+		if presentOwnerId != userID:
+			abort(403)
+
+
+		# Send request
+		name = request.json['name'];
+		desc = request.json['description'];
+		cost = request.json['cost'];
+		url = request.json['url'];
+		presentId = presentID
+
+		callDB('update_present', presentId, name, desc, cost, url)
+
+		return make_response('', 204)
+
+	def delete(self, userID, presentID):
+
+		# Check that user has a session
+		if 'username' not in session:
+			abort(401)
+
+		# Check that session is correct
+		if session['user_id'] != userID:
+			abort(403)
+	
+		# We need an intermediary call for the present the user is updating
+		# If the present doesn't exist, 404
+		present = callDB('get_present', presentID)
+		if len(present) == 0:
+			abort(404)
+
+		# If the present belongs to someone else, 403
+		presentOwnerId = present[0]['user_id']
+		if presentOwnerId != userID:
+			abort(403)
+
+		# Send request
+		callDB('delete_present', presentID)
 
 		return make_response('', 204)

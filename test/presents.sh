@@ -14,8 +14,10 @@ echo To test, we need two distinct pairs of known valid credentials \(LDAP\).
 echo They must NOT already be registered with the system.
 read -p "Username 1: " user1
 read -s -p "Password 1: " pass1
+printf "\n"
 read -p "Username 2: " user2
 read -s -p "Password 2: " pass2
+printf "\n"
 
 printf "\n=> SETUP <=\n"
 echo Registering the test users with the system...
@@ -45,7 +47,7 @@ curl -Lf "$ptcl://$host:$port/login" \
 
 printf "\n=> TEST <=\n"
 echo Send a POST request for a non-existent user, authenticated as user1.
-echo Expected response: 404
+echo Expected response: 403
 curl -Li "$ptcl://$host:$port/users/0/presents" \
 	-b testcookie1 \
 	-H 'Content-Type: application/json' \
@@ -62,7 +64,7 @@ printf "\n=> TEST <=\n"
 echo Send a POST request for user1, authenticated as user2.
 echo Expected response: 403
 curl -Li "$ptcl://$host:$port/users/$uid1/presents" \
-	-b testcookie1 \
+	-b testcookie2 \
 	-H 'Content-Type: application/json' \
 	-X POST -d '{"name": "present1", "description": "cool", "cost": 5, "url": "www.amazon.ca/aa"}'
 
@@ -122,12 +124,6 @@ printf "\n=> TEST <=\n"
 echo Send a GET request for user1, authenticated as user1, with a query on description.
 echo Expected response: 200
 curl -Li "$ptcl://$host:$port/users/$uid1/presents?description=rad" \
-	-b testcookie1
-
-printf "\n=> TEST <=\n"
-echo Send a GET request for user1, authenticated as user1, with a query on cost.
-echo Expected response: 200
-curl -Li "$ptcl://$host:$port/users/$uid1/presents?minCost=8&maxCost=12" \
 	-b testcookie1
 
 printf "\n=> TEST <=\n"
