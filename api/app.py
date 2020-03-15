@@ -78,7 +78,7 @@ api.add_resource(Present, '/users/<int:userID>/presents/<int:presentID>')
 # Start up the application.
 
 if __name__ == '__main__':
-	context = ('cert.pem', 'key.pem')
+	context = (settings.SSL_CERT, settings.SSL_KEY)
 	app.run(host=settings.APP_HOST,
 		port=settings.APP_PORT,
 		ssl_context=context,

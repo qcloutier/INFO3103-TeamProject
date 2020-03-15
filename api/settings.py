@@ -16,3 +16,6 @@ SECRET_KEY = ''
 
 LDAP_HOST =  ''
 LDAP_ENABLE = True
+
+SSL_CERT = ''
+SSL_KEY = ''
