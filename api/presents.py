@@ -1,61 +1,83 @@
 #!/usr/bin/env python3
+#
+# Defines methods for creating and
+# accessing the presents in the system.
 
-from flask import Flask, jsonify, abort, request, make_response, session
-from flask_restful import reqparse, Resource, Api
-from flask_session import Session
+from flask import jsonify, abort, request, make_response, session
+from flask_restful import Resource, reqparse
 
-import pymysql.cursors
-import json
-import sys
 from utils import callDB
 
 class Presents(Resource):
 
 	def get(self, userID):
-
-		#User must be logged in to access
+		# The user must be authenticated.
 		if 'username' not in session:
-			abort(401)
+			abort(401, 'You must log in first.')
 
-		# We need an intermediary call for the user whose presents we want
-		# If the user doesn't exist, 404
-		user = callDB('get_user', userID, '')
+		# Get the user from the database.
+		try:
+			user = callDB('get_user', userID, '')
+		except:
+			abort(500, 'Failed to find user in database.')
+
+		# Verify that the user actually exists.
 		if len(user) == 0:
-			abort(404)
+			abort(404, 'No such user.')
 
-		requestArgs = request.args
+		# Get the presents from the database.
+		try:
+			print(request.args)
+			rows = callDB('get_presents',
+				request.args.get('name'),
+				request.args.get('description'),
+				userID)
+			print(rows)
+		except:
+			abort(500, 'Failed to get presents from database.')
 
-		rows = callDB('get_presents',
-			requestArgs.get('name'),
-			requestArgs.get('desc'),
-			userID)
-
-		# Decimal class cannot be serialized, convert to float
+		# The decimal class cannot be serialized
+		# so we must convert the cost to a float.
 		for row in rows:
 			row['cost'] = float(row['cost'])
 
-		return make_response(jsonify({'presents': rows}), 200)
+		return make_response(jsonify(rows), 200)
 
 	def post(self, userID):
-
-		#User must be logged in to create a present for themself
+		# The user must be authenticated.
 		if 'username' not in session:
-			abort(401)
+			abort(401, 'You must log in first.')
 
+		# The user can only add presents to their own list.
 		if session['user_id'] != userID:
-			abort(403)
+			abort(403, 'You cannot request presents for another user.')
 
-		if not request.json or not 'name' in request.json:
-			abort(400)
+		# Parse the body of the request.
+		try:
+			# No JSON, no service.
+			if not request.json:
+				abort(400, 'Expected JSON, but did not recieve any.')
 
-		name = request.json['name'];
-		desc = request.json['description'];
-		cost = request.json['cost'];
-		url = request.json['url'];
-		userId = userID;
+			parser = reqparse.RequestParser()
 
-		rows = callDB('create_present', name, desc, cost, url, userId)
+			parser.add_argument('name', type=str, required=True)
+			parser.add_argument('description', type=str, required=False)
+			parser.add_argument('cost', type=float, required=False)
+			parser.add_argument('url', type=str, required=False)
 
-		pid = rows[0]['LAST_INSERT_ID()']
-		return make_response(jsonify( { "present_id" : pid } ), 201)
+			params = parser.parse_args()
+		except:
+			abort(400, 'Could not parse request.')
+
+		# Create the present in the database.
+		try:
+			rows = callDB('create_present', params['name'],
+				params['description'], params['cost'],
+				params['url'], userID)
+
+			presentID = rows[0]['LAST_INSERT_ID()']
+		except:
+			abort(500, 'Failed to create present in database.')
+
+		return make_response(jsonify({"present_id": presentID}), 201)
 

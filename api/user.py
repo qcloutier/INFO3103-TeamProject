@@ -1,61 +1,67 @@
 #!/usr/bin/env python3
+#
+# Defines methods for accessing and
+# modifying the users of the system.
 
-from flask import Flask, jsonify, abort, request, make_response, session
-from flask_restful import reqparse, Resource, Api
-from flask_session import Session
+from flask import jsonify, abort, request, make_response, session
+from flask_restful import Resource, reqparse
 
-from ldap3 import Server, Connection, ALL
-from ldap3.core.exceptions import *
-
-import json
-import sys
-
-import settings
-import utils
+from utils import callDB
 
 class User(Resource):
 
 	def delete(self, userID):
+		# The user must be authenticated.
 		if 'username' not in session:
-			abort(401)
+			abort(401, 'You must log in first.')
 
+		# The user can only delete themselves.
 		if session['user_id'] != userID:
-			abort(403)
+			abort(403, 'You cannot delete another user.')
 
+		# Delete the user from the database.
 		try:
-			utils.callDB('delete_user', userID)
+			callDB('delete_user', userID)
 		except:
-			abort(500)
+			abort(500, 'Failed to delete user from database.')
 
+		# Log out the user from the system.
 		session.clear()
 
 		return make_response('', 204)
 
 	def get(self, userID):
+		# The user must be authenticated.
 		if 'username' not in session:
-			abort(401)
+			abort(401, 'You must log in first.')
 
+		# Get the user from the database.
 		try:
-			rows = utils.callDB('get_user', userID, '')
+			rows = callDB('get_user', userID, '')
 		except:
-			abort(500)
+			abort(500, 'Failed to get user from database.')
 
+		# Verify that the user actually exists.
 		if len(rows) == 0:
-			abort(404)
+			abort(404, 'No such user.')
 
-		return make_response(jsonify(rows), 200)
+		return make_response(jsonify(rows[0]), 200)
 
 	def put(self, userID):
-		if not request.json:
-			abort(400)
-
+		# The user must be authenticated.
 		if 'username' not in session:
-			abort(401)
+			abort(401, 'You must log in first.')
 
+		# The user can only modify themselves.
 		if session['user_id'] != userID:
-			abort(403)
+			abort(403, 'YOu cannot modify another user.')
 
+		# Parse the body of the request.
 		try:
+			# No JSON, no service.
+			if not request.json:
+				abort(400, 'Expected JSON, but did not recieve any.')
+
 			parser = reqparse.RequestParser()
 
 			parser.add_argument('first_name', type=str, required=False)
@@ -64,12 +70,13 @@ class User(Resource):
 
 			params = parser.parse_args()
 		except:
-			abort(400)
+			abort(400, 'Could not parse request.')
 
+		# Update the user in the database.
 		try:
-			res = utils.callDB('update_user', request.args.get('userID'),
-				params['first_name'], params['last_name'], params['dob'])
+			res = callDB('update_user', userID, params['first_name'],
+				params['last_name'], params['dob'])
 		except:
-			abort(500)
+			abort(500, 'Failed to update user in database.')
 
 		return make_response('', 204)

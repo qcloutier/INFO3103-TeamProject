@@ -13,7 +13,7 @@ BEGIN
 		first_name = COALESCE(first_name_in, first_name),
 		last_name  = COALESCE(last_name_in, last_name),
 		dob        = COALESCE(dob_in, dob)
-  WHERE user_id = user_id_in;
+	WHERE user_id = user_id_in;
 END //
 
 DELIMITER ;

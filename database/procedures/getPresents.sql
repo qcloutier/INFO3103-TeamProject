@@ -16,8 +16,8 @@ BEGIN
 	END IF;
 
 	SELECT * FROM presents
-	WHERE name LIKE name_in
-		AND description LIKE description_in
+	WHERE name LIKE CONCAT('%', name_in, '%')
+		AND description LIKE CONCAT('%', description_in, '%')
 		AND user_id = user_id_in;
 END //
 
