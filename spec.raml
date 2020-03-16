@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Present Registry API
-baseUri: info3103.cs.unb.ca/qcloutie/project
+baseUri: info3103.cs.unb.ca
 version: v1
 /login:
   delete:
@@ -9,12 +9,6 @@ version: v1
     responses:
       204:
       404:
-        body:
-          application/json:
-            example: |
-              {
-                "msg": "No such session."
-              }
   post:
     description: |
       Create a new session for a registered user.
@@ -40,13 +34,6 @@ version: v1
           Set-Cookie:
       400:
       401:
-      404:
-        body:
-          application/json:
-            example: |
-              {
-                "msg": "No such user."
-              }
 /users:
   get:
     description: |
@@ -54,11 +41,11 @@ version: v1
       Can filter on given parameters.
       Accessible to all registered users.
     queryParameters:
-      first?:
+      first_name?:
         description: The first name of a user, or a fragment of it.
         type: string
-        example: jo
-      last?:
+        example: j
+      last_name?:
         description: The last name of a user, or a fragment of it.
         type: string
         example: smith
@@ -69,25 +56,21 @@ version: v1
             example: |
               [
                 {
-                  "id": 3,
-                  "first": "Bob",
-                  "last": "Smith",
+                  "user_id": 3,
+                  "username": "bsmith",
+                  "first_name": "Bob",
+                  "last_name": "Smith",
                   "dob": "1990-12-31"
                 },
                 {
-                  "id": 4,
-                  "first": "Alice",
-                  "last": "Smith",
+                  "user_id": 4,
+                  "username": "asmith",
+                  "first_name": "Alice",
+                  "last_name": "Smith",
                   "dob": "1992-09-01"
                 }
               ]
       401:
-        body:
-          application/json:
-            example: |
-              {
-                "msg": "Only registered users can view this."
-              }
   post:
     description: |
       Register a new user with the service.
@@ -99,8 +82,8 @@ version: v1
             "type": "object",
             "$schema": "http://json-schema.org/draft/2019-09/schema",
             "properties": {
-              "first": { "type": "string" },
-              "last": { "type": "string" },
+              "first_name": { "type": "string" },
+              "last_name": { "type": "string" },
               "dob": { "type": "string" },
               "username": { "type": "string" },
               "password": { "type": "string" }
@@ -108,8 +91,8 @@ version: v1
           }
         example: |
           {
-            "first": "John",
-            "last": "Smith",
+            "first_name": "John",
+            "last_name": "Smith",
             "dob": "1970-01-31",
             "username": "jsmith",
             "password": "password1!"
@@ -120,7 +103,7 @@ version: v1
           application/json:
             example: |
               {
-                "id": 5
+                "user_id": 5
               }
       400:
   /{user}:
@@ -134,26 +117,8 @@ version: v1
       responses:
         204:
         401:
-          body:
-            application/json:
-              example: |
-                {
-                  "msg": "You must be logged in to do this."
-                }
         403:
-          body:
-            application/json:
-              example: |
-                {
-                  "msg": "Only the user owner can remove this."
-                }
         404:
-          body:
-            application/json:
-              example: |
-                {
-                  "msg": "No such user."
-                }
     get:
       description: |
         Get the details for a user.
@@ -167,33 +132,21 @@ version: v1
                   "type": "object",
                   "$schema": "http://json-schema.org/draft/2019-09/schema",
                   "properties": {
-                    "first": { "type": "string" },
-                    "last": { "type": "string" },
+                    "username": { "type": "string" },
+                    "first_name": { "type": "string" },
+                    "last_name": { "type": "string" },
                     "dob": { "type": "string" }
                   }
                 }
               example: |
                 {
-                  "user": {
-                    "first": "John",
-                    "last": "Smith",
-                    "dob": "1970-01-31"
-                  }
+                  "username": "jsmith",
+                  "first_name": "John",
+                  "last_name": "Smith",
+                  "dob": "1970-01-31"
                 }
         401:
-          body:
-            application/json:
-              example: |
-                {
-                  "msg": "Only registered users can view this."
-                }
         404:
-          body:
-            application/json:
-              example: |
-                {
-                  "msg": "No such user."
-                }
     put:
       description: |
         Modify the details for a user.
@@ -205,42 +158,22 @@ version: v1
               "type": "object",
               "$schema": "http://json-schema.org/draft/2019-09/schema",
               "properties": {
-                "first": { "type": "string" },
-                "last": { "type": "string" },
+                "first_name": { "type": "string" },
+                "last_name": { "type": "string" },
                 "dob": { "type": "string" }
               }
             }
           example: |
             {
-              "user": {
-                "first": "Johnathon",
-                "last": "Smithsodian",
-                "dob": "2000-02-29"
-              }
+              "first_name": "Johnathon",
+              "last_name": "Smithsodian",
+              "dob": "2000-02-29"
             }
       responses:
         204:
         401:
-          body:
-            application/json:
-              example: |
-                {
-                  "msg": "You must be logged in to do this."
-                }
         401:
-          body:
-            application/json:
-              example: |
-                {
-                  "msg": "Only the user owner can modify this."
-                }
         404:
-          body:
-            application/json:
-              example: |
-                {
-                  "msg": "No such user."
-                }
     /presents:
       get:
         description: |
@@ -263,34 +196,24 @@ version: v1
                 example: |
                   [
                     {
-                      "id": 2,
+                      "present_id": 2,
                       "name": "Some item",
                       "description": "This is a cool item and I wish I had one!",
                       "cost": 19.99,
-                      "url": "amazon.ca/someitem"
+                      "url": "amazon.ca/someitem",
+                      "user_id": 5
                     },
                     {
-                      "id": 3,
+                      "present_id": 3,
                       "name": "Some other item",
                       "description": "This is also a cool item and I wish I had one as well!",
                       "cost": 24.95,
-                      "url": "amazon.ca/someotheritem"
+                      "url": "amazon.ca/someotheritem",
+                      "user_id": 5
                     }
                   ]
           401:
-            body:
-              application/json:
-                example: |
-                  {
-                    "msg": "Only registered users can view this."
-                  }
           404:
-            body:
-              application/json:
-                example: |
-                  {
-                    "msg": "No such user or present."
-                  }
       post:
         description: |
           Add a new present to the present list of a user.
@@ -310,12 +233,10 @@ version: v1
               }
             example: |
               {
-                "present": {
-                  "name": "Yet another item",
-                  "description": "This item is also cool and I really want one!",
-                  "cost": 15.50,
-                  "url": "amazon.ca/yetanotheritem"
-                }
+                "name": "Yet another item",
+                "description": "This item is also cool and I really want one!",
+                "cost": 15.50,
+                "url": "amazon.ca/yetanotheritem"
               }
         responses:
           201:
@@ -323,22 +244,10 @@ version: v1
               application/json:
                 example: |
                   {
-                    "id": "4"
+                    "present_id": "4"
                   }
           401:
-            body:
-              application/json:
-                example: |
-                  {
-                    "msg": "You must be logged in to do this."
-                  }
           403:
-            body:
-              application/json:
-                example: |
-                  {
-                    "msg": "Only the user owner can do this."
-                  }
       /{present}:
         description: |
           Perform actions on a specific present,
@@ -350,26 +259,8 @@ version: v1
           responses:
             204:
             401:
-              body:
-                application/json:
-                  example: |
-                    {
-                      "msg": "You must be logged in to do this."
-                    }
             403:
-              body:
-                application/json:
-                  example: |
-                    {
-                      "msg": "Only the user owner can remove this."
-                    }
             404:
-              body:
-                application/json:
-                  example: |
-                    {
-                      "msg": "No such user or present."
-                    }
         get:
           description: |
             Get the details of a present for a user.
@@ -386,7 +277,8 @@ version: v1
                         "name": { "type": "string" },
                         "desc": { "type": "string" },
                         "cost": { "type": "number" },
-                        "url": { "type": "string" }
+                        "url": { "type": "string" },
+                        "user_id": { "type": "number" }
                       }
                     }
                   example: |
@@ -394,22 +286,11 @@ version: v1
                       "name": "Yet another item",
                       "description": "This item is also cool and I really want one!",
                       "cost": 15.50,
-                      "url": "amazon.ca/yetanotheritem"
+                      "url": "amazon.ca/yetanotheritem",
+                      "user_id": 5
                     }
             401:
-              body:
-                application/json:
-                  example: |
-                    {
-                      "msg": "Only registered users can view this."
-                    }
             404:
-              body:
-                application/json:
-                  example: |
-                    {
-                      "msg": "No such user or present."
-                    }
         put:
           description: |
             Modify the details of a present for a user.
@@ -437,23 +318,5 @@ version: v1
           responses:
             204:
             401:
-              body:
-                application/json:
-                  example: |
-                    {
-                      "msg": "You must be logged in to modify this."
-                    }
             403:
-              body:
-                application/json:
-                  example: |
-                    {
-                      "msg": "Only the user owner can modify this."
-                    }
             404:
-              body:
-                application/json:
-                  example: |
-                    {
-                      "msg": "No such user or present."
-                    }
