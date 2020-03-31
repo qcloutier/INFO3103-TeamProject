@@ -1,0 +1,30 @@
+#presentWindow {
+  height: 500px;
+  width: 1200px;
+  background-color: #1BAD69;
+}
+
+#presentSearchBar {
+  text-align: center;
+  padding: 10px;
+}
+
+#presentSearchText {
+  width: 500px;
+}
+
+#btnCreateNewPresent {
+  background-color: transparent;
+  border: none;
+  position: relative;
+  top: 9px;
+}
+
+#imgAddNew {
+  width: 30px;
+  height: 30px;
+}
+
+#btnAddPresent {
+  border: none;
+}
