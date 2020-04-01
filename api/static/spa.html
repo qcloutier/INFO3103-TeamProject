@@ -7,25 +7,46 @@
 <body>
   <div id="app">
 
-    <div>
-      <input type="text" name="username" placeholder="Username"/><br>
-      <input type="password" name="password" placeholder="Password"/><br>
-      <button class="btn btn-outline-success" type="button">Login</button>
+    <div v-if="!auth">
+      <div class="card-deck">
+        <div class="card m-5 p-5" style="min-width: 20rem">
+          <div class="m-3">
+            <h2>Sign in</h2>
+          </div>
+          <div class="form-group m-3">
+            <input class="form-control" type="text" name="username" placeholder="Username" v-model="creds.username"/><br>
+            <input class="form-control" type="password" name="password" placeholder="Password" v-model="creds.password"/><br>
+          </div>
+          <div class="form-group m-3">
+            <button class="btn btn-outline-success" type="button" v-on:click="login()">Enter</button>
+          </div>
+        </div>
+        <div class="card m-5 p-5" style="min-width: 20rem">
+          <div class="m-3">
+            <h2>Sign up</h2>
+          </div>
+          <div class="m-3">
+            <label>Name</label>
+            <input class="form-control" placeholder="First Name" type="text" v-model="user.first_name"/><br>
+            <input class="form-control" placeholder="Last Name" type="text" v-model="user.last_name"/><br>
+            <label>Birthday <small class="text-muted">(optional)</small></label>
+            <input class="form-control" type="date" v-model="user.dob"/><br>
+          </div>
+          <div class="m-3">
+            <label>Credentials</label>
+            <input class="form-control" type="text" name="username" placeholder="Username" v-model="user.username"/><br>
+            <input class="form-control" type="password" name="password" placeholder="Password" v-model="user.password"/><br>
+          </div>
+          <div class="m-3">
+            <button class="btn btn-outline-success" type="button" v-on:click="createUser()">Register</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div>
-      <input type="text" name="firstName" placeholder="First Name"/><br>
-      <input type="text" name="lastName" placeholder="Last Name"/><br>
-      <input type="date" name="dateOfBirth"/><br>
-      <input type="text" name="username" placeholder="Username"/><br>
-      <input type="password" name="password" placeholder="Password"/><br>
-      <button class="btn btn-outline-success" type="button">Register</button>
-    </div>
-
-    <div>
-
+    <div v-if="auth">
       <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">Present Registry</a>
+        <a class="navbar-brand" href="#">Another Present Registry</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#userBar" aria-controls="userBar" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -37,14 +58,32 @@
             </li>
           </ul>
           <div>
-            <button class="btn btn-secondary" type="button">Logout</button>
+            <button class="btn btn-secondary" type="button" v-on:click="logout()">Logout</button>
+            <button class="btn btn-secondary" type="button" v-on:click="showUserSettings()">⚙️</button>
           </div>
         </div>
       </nav>
 
+      <modal v-if="displayUserSettings" @close="hideUserSettings()">
+        <div slot="header">Edit your user info</div>
+        <div slot="body">
+        </div>
+        <div slot="footer">
+          <button type="button" class="btn btn-secondary" v-on:click="hideUserSettings()">Close</button>
+        </div>
+      </modal>
+
+      <script type="text/x-template" id="modal-template">
+        <transition name="modal">
+          <div class="modal-backdrop">
+            <div class="modal"></div>
+          </div>
+        </transition>
+      </script>
+
       <div class="jumbotron text-center">
         <h1>Some user</h1>
-        <h2>🎂 12/34/6789</h2>
+        <h5 class="text-muted">🎂 12/34/6789</h1>
       </div>
 
       <div id="presentView" class="card mx-auto w-75">
@@ -61,7 +100,6 @@
               <th>Description</th>
               <th>Cost</th>
               <th>URL</th>
-              <th></th>
               <th></th>
             </tr>
           </thead>
