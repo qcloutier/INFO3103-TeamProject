@@ -6,7 +6,7 @@ var app = new Vue({
 	el: "#app",
 
 	data: {
-		service: "https://info3103.cs.unb.ca:8037",
+		service: "https://info3103.cs.unb.ca:8046",
 		creds: {
 			username: "",
 			password: ""
@@ -26,7 +26,19 @@ var app = new Vue({
 			dob: ""
 		},
 		auth: false,
-		displayUserSettings: false
+		loggedInID: "",
+		displayUserSettings: false,
+		userSearchString: "",
+		userSearchResult: {},
+		creatingPresent: false,
+		present: {
+			name: "",
+			description: "",
+			cost: "",
+			url: ""
+		},
+		presentSearchString: "",
+		presentSearchResult: {}
 	},
 
 	methods: {
@@ -39,6 +51,17 @@ var app = new Vue({
 				}).then(response => {
 					alert("Success");
 					this.auth = true;
+
+					this.userSearchString = this.creds.username;
+					this.getUsers().then(response => {
+						for(var i = 0; i < this.userSearchResult.length; i++){
+							if(this.userSearchResult[i].username === this.creds.username){
+								this.loggedInID = this.userSearchResult[i].user_id;
+								break;
+							}
+						}
+					});
+
 				}).catch(e => {
 					alert("Invalid credentials");
 				});
@@ -80,7 +103,12 @@ var app = new Vue({
 		},
 
 		getUsers() {
-
+			return axios.get(this.service + "/users?name=" + this.userSearchString)
+			.then(response => {
+				this.userSearchResult = response.data;
+			}).catch(e => {
+				alert("Error");
+			});
 		},
 
 		getUser() {
@@ -95,6 +123,57 @@ var app = new Vue({
 
 		updateUser() {
 
+		},
+
+		addCreatePresentRow() {
+			this.creatingPresent = true;
+		},
+
+		createPresent() {
+			if (this.present.name != "") {
+				axios.post(this.service + "/users/" + this.loggedInID + "/presents", {
+					"name": this.present.name,
+					"description": this.present.description,
+					"cost": this.present.cost,
+					"url": this.present.url
+				}).then(response => {
+					alert("Successfully created present");
+					this.creatingPresent = false;
+				}).catch(e => {
+					alert("Error");
+				});
+			} else {
+				alert("fwhjfjkha");
+			}
+		},
+
+		getPresent(presentId) {
+
+		},
+
+		getPresents() {
+			axios
+			.get(this.service +"/users/" + this.loggedInID + "/presents?name=" + this.presentSearchString)
+			.then(response => {
+				this.presentSearchResult = response.data;
+			})
+			.catch(e => {
+			  alert("Failed to fetch da presents");
+			  console.log(e);
+			});
+		},
+
+		updatePresent() {
+
+		},
+
+		deletePresent(presentId) {
+			axios.delete(this.service + "/users/" + this.loggedInID + "/presents/" + presentId)
+			.then(response => {
+				alert("Successfully deleted present");
+			}).catch(e => {
+				alert("Error");
+			});
 		},
 
 		showUserSettings() {
