@@ -6,7 +6,7 @@ var app = new Vue({
 	el: "#app",
 
 	data: {
-		service: "https://info3103.cs.unb.ca:8046",
+		service: "https://info3103.cs.unb.ca:8037",
 		creds: {
 			username: "",
 			password: ""
@@ -62,6 +62,7 @@ var app = new Vue({
 						}
 					});
 
+					document.getElementById("app").setAttribute("class", "");
 				}).catch(e => {
 					alert("Invalid credentials");
 				});
@@ -89,10 +90,10 @@ var app = new Vue({
 					"password": this.user.password
 				}).then(response => {
 					alert("Success");
-					this.auth = true;
 				}).catch(e => {
 					alert("Error");
 				});
+
 			} else {
 				alert("fwhjfjkha");
 			}
@@ -158,8 +159,8 @@ var app = new Vue({
 				this.presentSearchResult = response.data;
 			})
 			.catch(e => {
-			  alert("Failed to fetch da presents");
-			  console.log(e);
+				alert("Failed to fetch da presents");
+				console.log(e);
 			});
 		},
 
@@ -182,7 +183,32 @@ var app = new Vue({
 
 		hideUserSettings() {
 			this.displayUserSettings = false;
+		},
+
+		randomPattern() {
+			var classes = document.getElementById("app").getAttribute("class");
+
+			switch (Math.floor(Math.random() * 6)) {
+				case 0: classes += " ptn-dots"; break;
+				case 1: classes += " ptn-stripes-d"; break;
+				case 2: classes += " ptn-stripes-h"; break;
+				case 3: classes += " ptn-stripes-v"; break;
+				case 4: classes += " ptn-waves"; break;
+				case 5: classes += " ptn-zigzag"; break;
+			}
+
+			switch (Math.floor(Math.random() * 3)) {
+				case 0: classes += " bg-blue"; break;
+				case 1: classes += " bg-red"; break;
+				case 2: classes += " bg-yellow"; break;
+			}
+
+			document.getElementById("app").setAttribute("class", classes);
 		}
+	},
+
+	mounted() {
+		this.randomPattern();
 	}
 
 });
