@@ -5,11 +5,11 @@
   <title>Present Registry</title>
 </head>
 <body>
-  <div id="app">
+  <div id="app" style="height: 100vh; font-family: serif">
 
     <div v-if="!auth">
-      <div class="card-deck">
-        <div class="card m-5 p-5" style="min-width: 20rem">
+      <div class="card-deck justify-content-center">
+        <div class="card m-5 p-5" style="min-width: 20rem; max-width: 40rem">
           <div class="m-3">
             <h2>Sign in</h2>
           </div>
@@ -21,7 +21,7 @@
             <button class="btn btn-outline-success" type="button" v-on:click="login()">Enter</button>
           </div>
         </div>
-        <div class="card m-5 p-5" style="min-width: 20rem">
+        <div class="card m-5 p-5" style="min-width: 20rem; max-width: 40rem">
           <div class="m-3">
             <h2>Sign up</h2>
           </div>
@@ -75,15 +75,15 @@
 
       <script type="text/x-template" id="modal-template">
         <transition name="modal">
-          <div class="modal-backdrop">
+  <div class="modal-backdrop">
             <div class="modal"></div>
           </div>
         </transition>
       </script>
 
       <div class="jumbotron text-center">
-        <h1>Some user</h1>
-        <h5 class="text-muted">🎂 12/34/6789</h1>
+        <h1>John Test</h1>
+        <h5 class="text-muted">🎂 01/01/1995</h1>
       </div>
 
       <div id="presentView" class="card mx-auto w-75">
