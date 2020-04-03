@@ -80,4 +80,3 @@ class Presents(Resource):
 			abort(500, 'Failed to create present in database.')
 
 		return make_response(jsonify({"present_id": presentID}), 201)
-
