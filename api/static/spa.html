@@ -53,8 +53,15 @@
         <div class="collapse navbar-collapse" id="userBar">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-              <input id="userSearch" type="text" name="search"  v-on:change="getUsers()" v-model="userSearchString" placeholder="Find a user..."/>
+              <input type="text" name="search" v-on:input="getUsers()" v-model="userSearchString" placeholder="Find a user..."/>
               <button class="btn btn-primary" type="button">Go</button>
+              <select id="userSearchList" v-if="userSearchResult != null" v-on:change="userChanged()" v-model="userSearchDropdown">
+
+                      <option v-for="curUser in userSearchResult" v-bind:value="{id: curUser.user_id}">
+                          {{curUser.first_name}} {{curUser.last_name}}
+                      </option>
+
+              </select>
             </li>
           </ul>
           <div>
@@ -64,26 +71,83 @@
         </div>
       </nav>
 
-      <modal v-if="displayUserSettings" @close="hideUserSettings()">
-        <div slot="header">Edit your user info</div>
+      <modal v-if="displayUserSettings" @close="hideUserSettings">
+        <!--
+          you can use custom content here to overwrite
+          default content
+        -->
+        <div slot="header" class="modal-header">
+          Edit Profile Info
+          <button class="btn btn-secondary" v-on:click="deleteUser()">DELETE PROFILE</button>
+        </div>
         <div slot="body">
+          <div class="form-group col-6">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text  modal-prepend">First Name</span>
+              </div>
+              <input class="col-8 form-control" type="text" id="schoolName" placeholder="First Name" v-model="profile.fname" />
+            </div>
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text modal-prepend">Last Name</span>
+              </div>
+              <input class="col-8 form-control" type="text" id="schoolProvince"placeholder="Last Name" v-model="profile.lname"/>
+            </div>
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text  modal-prepend">Date Of Birth</span>
+              </div>
+
+              <input class="col-8 form-control" type="date" v-model="profile.dob"/><br>
+              <!-- <input class="col-8 form-control" type="text" id="schoolProvince"placeholder="Date of Birth" v-model="profile.dob"/> -->
+            </div>
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <button class="btn btn-secondary" v-on:click="updateUser()">Update</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div slot="footer">
           <button type="button" class="btn btn-secondary" v-on:click="hideUserSettings()">Close</button>
         </div>
       </modal>
 
+      <!-- template for the modal component -->
       <script type="text/x-template" id="modal-template">
         <transition name="modal">
-  <div class="modal-backdrop">
-            <div class="modal"></div>
+          <div class="modal-backdrop">
+          <div class="modal">
+            <header class="modal-header">
+              <slot name="header">
+                This is the default tile!
+                <button type="button" class="btn-close" @click="hideModal()">
+                  x
+                </button>
+              </slot>
+            </header>
+            <section class="modal-body">
+              <slot name="body">
+                I'm the default body!
+              </slot>
+             </section>
+             <footer class="modal-footer">
+                <slot name="footer">
+                  I'm the default footer!
+                  <button type="button" class="btn-green" @click="hideModal()">
+                    Close me!
+                  </button>
+                </slot>
+              </footer>
+            </div>
           </div>
         </transition>
       </script>
 
       <div class="jumbotron text-center">
-        <h1>John Test</h1>
-        <h5 class="text-muted">🎂 01/01/1995</h1>
+        <h1>{{selectedUserHeader}}</h1>
+        <h5 class="text-muted">🎂 {{selectedUserBday}}</h5>
       </div>
 
       <div id="presentView" class="card mx-auto w-75">
@@ -128,16 +192,31 @@
             <!--End of adding present -->
 
             <template v-if="presentSearchResult != null">
-                <template v-for="present in presentSearchResult">
+                <template v-for="curPresent in presentSearchResult">
                     <tr>
-                      <td>{{present.name}}</td>
-                      <td>{{present.description}}</td>
-                      <td>{{present.cost}}</td>
-                      <td>{{present.url}}</td>
+                        <template v-if="!curPresent.updatingPresent">
+                          <td>{{curPresent.name}}</td>
+                          <td>{{curPresent.description}}</td>
+                          <td>{{curPresent.cost}}</td>
+                          <td>{{curPresent.url}}</td>
+                        </template>
+                        <template v-else>
+                          <td>
+                              <input type="text" placeholder="Present Name" v-model="curPresent.name"></input>
+                          </td>
+                          <td>
+                              <input type="text" placeholder="Present Description" v-model="curPresent.description"></input>
+                          </td>
+                          <td>
+                              <input type="text" placeholder="Present Price" v-model="curPresent.cost"></input>
+                          </td>
+                          <td>
+                              <input type="text" placeholder="Present URL" v-model="curPresent.url"></input>
+                          </td>
+                        </template>
                       <td>
-                        <!-- These rows should be generated by JS, and the delete/update buttons will be bound with respect to that row's present ID-->
-                        <button class="btn btn-light" v-on:click="updateSchool()">✏️</button>
-                        <button class="btn btn-light" v-on:click="deletePresent(present.present_id)">🗑️</button>
+                        <button class="btn btn-light" v-on:click="updatePresent(curPresent)">✏️</button>
+                        <button class="btn btn-light" v-on:click="deletePresent(curPresent.present_id)">🗑️</button>
                       </td>
                     </tr>
                 </template>
