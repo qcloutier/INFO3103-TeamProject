@@ -6,88 +6,104 @@ var app = new Vue({
 	el: "#app",
 
 	data: {
-		service: "https://info3103.cs.unb.ca:8046",
-		creds: {
-			username: "",
-			password: ""
-		},
-		user: {
-			id: "",
-			first_name: "",
-			last_name: "",
-			dob: "",
-			username: "",
-			password: ""
-		},
-		profile: {
-			id: "",
-			fname: "",
-			lname: "",
-			dob: ""
-		},
-		present: {
-			name: "",
-			description: "",
-			cost: "",
-			url: ""
-		},
+		service: "https://info3103.cs.unb.ca:8037",
 
-		auth: false,
-		loggedInID: "",
-		selectedUserId: 0,
+		signin: { username: "", password: "", auth: false, error: "" },
+		signup: { first_name: "", last_name: "", dob: "", username: "", password: "", error: "" },
 
-		selectedUserHeader: "",
-		selectedUserBday: "",
+		account: { user_id: "", first_name: "", last_name: "", dob: "", updating: false, msg: "" },
+		profile: { user_id: "", name: "", birthday: "" },
+		userSearch: { query: "", results: {}, dropdown: {} },
 
-		displayUserSettings: false,
-
-		userSearchString: "",
-		userSearchResult: {},
-		userSearchDropdown: {},
-
-		creatingPresent: false,
-
-		presentSearchString: "",
-		presentSearchResult: {}
+		present: { present_id: "", name: "", description: "", cost: "", url: "", creating: false, updating: false, error: "" },
+		presentSearch: { query: "", results: {} }
 	},
 
 	methods: {
+		/*
+		Pick a random pattern and colour for
+		the background of the application.
+		*/
+		randomPattern() {
+			var ptn = "";
+			var bg = "";
 
+			switch (Math.floor(Math.random() * 6)) {
+				case 0: ptn = "ptn-dots"; break;
+				case 1: ptn = "ptn-stripes-d"; break;
+				case 2: ptn = "ptn-stripes-h"; break;
+				case 3: ptn = "ptn-stripes-v"; break;
+				case 4: ptn = "ptn-waves"; break;
+				case 5: ptn = "ptn-zigzag"; break;
+			}
+
+			switch (Math.floor(Math.random() * 3)) {
+				case 0: bg = "bg-blue"; break;
+				case 1: bg = "bg-red"; break;
+				case 2: bg = "bg-yellow"; break;
+			}
+
+			document.getElementById("app").classList.add(bg, ptn);
+		},
+
+		/*
+		Login to the service using the
+		values in the sigin object.
+		*/
 		login() {
-			if (this.creds.username != "" && this.creds.password != "") {
+			if (this.signin.username != "" && this.signin.password != "") {
 				axios.post(this.service + "/login", {
-					"username": this.creds.username,
-					"password": this.creds.password
+					"username": this.signin.username,
+					"password": this.signin.password
 				}).then(response => {
-					alert("Success");
-					//this.userSearchString = this.creds.username;
-					this.getUsers().then(response => {
-						for(var i = 0; i < this.userSearchResult.length; i++){
-							if(this.userSearchResult[i].username === this.creds.username){
-
-								break;
-							}
-						}
-						this.initializePageForUser(this.selectedUserId);
+					this.getUser(response.data.user_id).then(response => {
+						this.account.user_id    = response.data.user_id;
+						this.account.dob        = response.data.dob;
+						this.account.first_name = response.data.first_name;
+						this.account.last_name  = response.data.last_name;
+					}).catch(e => {
+						console.log(e);
 					});
-					this.loggedInID = response.data.user_id;
-					this.selectedUserId = this.loggedInID;
-					this.profile.id = response.data.user_id;
-					this.profile.dob = response.data.dob;
-					this.profile.fname = response.data.first_name;
-					this.profile.lname = response.data.last_name;
 
-					this.auth = true;
-
-					document.getElementById("app").setAttribute("class", "");
+					this.showProfile(response.data.user_id);
+					this.signin.auth = true;
 				}).catch(e => {
-					alert("Invalid credentials");
+					this.signin.error = "Incorrect username or password.";
 				});
 			} else {
-				alert("No credentials provided");
+				this.signin.error = "Username and password are required.";
 			}
 		},
 
+		/*
+		Register a new user with the service
+		using the values in the signup object.
+		*/
+		createUser() {
+			if (this.signup.first_name != "" && this.signup.last_name != ""
+					&& this.signup.username != "" && this.signup.password != "") {
+				axios.post(this.service + "/users", {
+					"first_name": this.signup.first_name,
+					"last_name":  this.signup.last_name,
+					"dob":        this.signup.dob,
+					"username":   this.signup.username,
+					"password":   this.signup.password
+				}).then(response => {
+					this.signin.username = this.signup.username;
+					this.signin.password = this.signup.password;
+					this.login();
+				}).catch(e => {
+					this.signup.error = "Invalid username or password.";
+				});
+			} else {
+				this.signup.error = "All required fields must be filled.";
+			}
+		},
+
+		/*
+		Logout the current user and reset
+		the state of the application.
+		*/
 		logout() {
 			axios.delete(this.service + "/login")
 			.then(response => {
@@ -97,203 +113,186 @@ var app = new Vue({
 			});
 		},
 
-		createUser() {
-			if (this.user.first_name != "" && this.user.last_name != "") {
-				axios.post(this.service + "/users", {
-					"first_name": this.user.first_name,
-					"last_name": this.user.last_name,
-					"dob": this.user.dob,
-					"username": this.user.username,
-					"password": this.user.password
-				}).then(response => {
-					alert("Success");
-				}).catch(e => {
-					alert("Error");
-				});
-
-			} else {
-				alert("fwhjfjkha");
-			}
+		/*
+		Show or hide the modal dialog
+		for the user's account settings.
+		*/
+		showUserSettings() {
+			this.showProfile(this.account.user_id);
+			this.account.updating = true;
+			this.account.msg = "";
+		},
+		hideUserSettings() {
+			this.showProfile(this.account.user_id);
+			this.account.updating = false;
+			this.account.msg = "";
 		},
 
+		/*
+		Update the user's account information
+		using the values in the account object.
+		*/
+		updateUser() {
+			axios.put(this.service + "/users/" + this.account.user_id, {
+				"first_name": this.account.first_name,
+				"last_name":  this.account.last_name,
+				"dob":        this.account.dob,
+			}).then(response => {
+				this.account.msg = "Updated successfully.";
+			}).catch(e => {
+				this.console.log(e);
+			});
+		},
+
+		/*
+		Delete the user's account from the service
+		and reset the state of the application.
+		*/
 		deleteUser() {
-			var areTheySure = confirm("Are you sure you want to delete your profile?");
+			var areTheySure = confirm("Are you sure you want to delete your account?");
 			if(areTheySure){
-				axios.delete(this.service + "/users/" + this.loggedInID)
+				axios.delete(this.service + "/users/" + this.account.user_id)
 				.then(response => {
-					alert("Successfully deleted your profile");
 					location.reload();
 				}).catch(e => {
-					alert("Error");
+					console.log(e);
 				});
 			}
 		},
 
-		getUsers() {
-			return axios.get(this.service + "/users?first_name=" + this.userSearchString)
-			.then(response => {
-				this.userSearchResult = response.data;
+		/*
+		Fetch and display the data for the profile view,
+		including the user's name, birthday, and present list.
+		*/
+		showProfile(userID) {
+			this.getUser(userID).then(response => {
+				this.profile.user_id = userID;
+				this.profile.name    = response.data.first_name + " " + response.data.last_name;
+
+				if(response.data.dob != null){
+					var d = new Date(response.data.dob);
+					this.profile.birthday = "🎂 " + (d.getMonth()+1) + "/" + d.getDate() + "/" + d.getFullYear();
+				} else {
+					this.profile.birthday = "";
+				}
+
+				this.getPresents();
 			}).catch(e => {
-				alert("Error");
-			});
-		},
-
-		selectUser(userId){
-			this.selectedUserId = userId;
-			getPresents();
-		},
-
-		getUser(userId) {
-			return axios.get(this.service + "/users/" + userId);
-		},
-
-		updateUser() {
-			axios
-			.put(this.service + "/users/" + this.profile.id, {
-				"first_name": this.profile.fname,
-				"last_name": this.profile.lname,
-				"dob": this.profile.dob,
-			})
-			.then(response => {
-				alert("Successfully updated user");
-			})
-			.catch(e => {
-				alert("Failed to update  user");
 				console.log(e);
 			});
 		},
 
-		addCreatePresentRow() {
-			this.creatingPresent = true;
+		/*
+		Get the data for the user with the given ID.
+		*/
+		getUser(userID) {
+			return axios.get(this.service + "/users/" + userID);
 		},
 
-		createPresent() {
-			if (this.present.name != "") {
-				axios.post(this.service + "/users/" + this.loggedInID + "/presents", {
-					"name": this.present.name,
-					"description": this.present.description,
-					"cost": this.present.cost,
-					"url": this.present.url
-				}).then(response => {
-					alert("Successfully created present");
-					this.getPresents();
-					this.creatingPresent = false;
-				}).catch(e => {
-					alert("Error");
-				});
-			} else {
-				alert("fwhjfjkha");
-			}
+		/*
+		Get a list of all users and allow the user
+		to select one to view their profile.
+		*/
+		getUsers() {
+			return axios.get(this.service + "/users?first_name=" + this.userSearch.query)
+			.then(response => {
+				this.userSearch.results = response.data;
+			}).catch(e => {
+				console.log(e);
+			});
+		},
+		userChanged() {
+			this.showProfile(this.userSearch.dropdown.id);
 		},
 
-		getPresent(presentId) {
-
-		},
-
+		/*
+		Get all of the presents belonging
+		to the user with the selected profile.
+		*/
 		getPresents() {
-			axios
-			.get(this.service +"/users/" + this.selectedUserId + "/presents?name=" + this.presentSearchString)
+			axios.get(this.service +"/users/" + this.profile.user_id + "/presents?name=" + this.presentSearch.query)
 			.then(response => {
 				for(var i = 0; i < response.data.length; i++){
-					response.data[i].updatingPresent = false;
+					response.data[i].updating = false;
 				}
-				this.presentSearchResult = response.data;
-			})
-			.catch(e => {
-				alert("Failed to fetch da presents");
+				this.presentSearch.results = response.data;
+			}).catch(e => {
 				console.log(e);
 			});
 		},
 
-		updatePresent(present) {
-			if(present.user_id != this.loggedInID){
-				alert("You may not alter other people's presents");
-				return;
+		/*
+		Display input fields for a new present,
+		and create it once they are filled.
+		*/
+		createPresent() {
+			if (this.present.creating) {
+				if (this.present.name != "" && this.present.description != "" && this.present.cost != "") {
+					axios.post(this.service + "/users/" + this.account.user_id + "/presents", {
+						"name":        this.present.name,
+						"description": this.present.description,
+						"cost":        this.present.cost,
+						"url":         this.present.url
+					}).then(response => {
+						this.present.name = "";
+						this.present.description = "";
+						this.present.cost = "";
+						this.present.url = "";
+
+						this.getPresents();
+					}).catch(e => {
+						console.log(e);
+					});
+
+					this.present.error = "";
+					this.present.creating = false;
+				} else {
+					this.present.error = "Name, description, and cost are required."
+				}
+			} else {
+				this.present.creating = true;
 			}
-			if(present.updatingPresent){
-				axios
-				.put(this.service + "/users/" + present.user_id + "/presents/" + present.present_id , {
-					"name": present.name,
+		},
+
+		/*
+		Display input fields for updating a present,
+		and apply the changes after they've been made.
+		*/
+		updatePresent(present) {
+			if (present.updating){
+				axios.put(this.service + "/users/" + present.user_id + "/presents/" + present.present_id, {
+					"name":        present.name,
 					"description": present.description,
-					"cost": present.cost,
-					"url": present.url
-				})
-				.then(response => {
-					alert("Successfully updated present");
+					"cost":        present.cost,
+					"url":         present.url
+				}).then(response => {
 					this.getPresents();
-				})
-				.catch(e => {
-					alert("Failed to update present");
+				}).catch(e => {
 					console.log(e);
 				});
 
-				present.updatingPresent = false;
-			} else{
-				present.updatingPresent = true;
+				present.updating = false;
+			} else {
+				present.updating = true;
 			}
 		},
 
-		deletePresent(presentId) {
-			axios.delete(this.service + "/users/" + this.loggedInID + "/presents/" + presentId)
+		/*
+		Delete the present with the given
+		ID number from the serivce.
+		*/
+		deletePresent(presentID) {
+			axios.delete(this.service + "/users/" + this.account.user_id + "/presents/" + presentID)
 			.then(response => {
-				alert("Successfully deleted present");
 				this.getPresents();
 			}).catch(e => {
-				alert("Error");
+				console.log(e);
 			});
-		},
-
-		initializePageForUser(userId) {
-			this.getUser(userId).then(response => {
-				this.selectedUserHeader = response.data.first_name + " " + response.data.last_name;
-				if(response.data.dob != null){
-					this.selectedUserBday = response.data.dob;
-				}
-			}).catch(e => {
-				alert("Error");
-			});
-
-			this.getPresents();
-		},
-
-		userChanged() {
-			var id = this.userSearchDropdown.id;
-			this.selectedUserId = id;
-			this.initializePageForUser(id);
-		},
-
-		showUserSettings() {
-			this.displayUserSettings = true;
-		},
-
-		hideUserSettings() {
-			this.displayUserSettings = false;
-		},
-
-		randomPattern() {
-			var classes = document.getElementById("app").getAttribute("class");
-
-			switch (Math.floor(Math.random() * 6)) {
-				case 0: classes += " ptn-dots"; break;
-				case 1: classes += " ptn-stripes-d"; break;
-				case 2: classes += " ptn-stripes-h"; break;
-				case 3: classes += " ptn-stripes-v"; break;
-				case 4: classes += " ptn-waves"; break;
-				case 5: classes += " ptn-zigzag"; break;
-			}
-
-			switch (Math.floor(Math.random() * 3)) {
-				case 0: classes += " bg-blue"; break;
-				case 1: classes += " bg-red"; break;
-				case 2: classes += " bg-yellow"; break;
-			}
-
-			document.getElementById("app").setAttribute("class", classes);
 		}
 	},
 
 	mounted() {
 		this.randomPattern();
+		document.getElementById("app").style.visibility = 'visible';
 	}
-
 });

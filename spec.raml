@@ -29,9 +29,15 @@ version: v1
             "password": "password1!"
           }
     responses:
-      204:
+      201:
         headers:
           Set-Cookie:
+        body:
+          application/json:
+            example: |
+              {
+                "user_id": 5
+              }
       400:
       401:
 /users:

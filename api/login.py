@@ -58,4 +58,4 @@ class Login(Resource):
 		session['username'] = params['username']
 		session['user_id'] = rows[0]['user_id']
 
-		return make_response(jsonify(rows[0]), 201)
+		return make_response(jsonify({"user_id": rows[0]['user_id']}), 201)
