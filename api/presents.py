@@ -27,12 +27,10 @@ class Presents(Resource):
 
 		# Get the presents from the database.
 		try:
-			print(request.args)
 			rows = callDB('get_presents',
 				request.args.get('name'),
 				request.args.get('description'),
 				userID)
-			print(rows)
 		except:
 			abort(500, 'Failed to get presents from database.')
 

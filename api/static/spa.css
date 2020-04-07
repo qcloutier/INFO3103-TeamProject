@@ -1,34 +1,3 @@
-#presentWindow {
-  height: 500px;
-  width: 1200px;
-  background-color: #1BAD69;
-}
-
-#presentSearchBar {
-  text-align: center;
-  padding: 10px;
-}
-
-#presentSearchText {
-  width: 500px;
-}
-
-#btnCreateNewPresent {
-  background-color: transparent;
-  border: none;
-  position: relative;
-  top: 9px;
-}
-
-#imgAddNew {
-  width: 30px;
-  height: 30px;
-}
-
-#btnAddPresent {
-  border: none;
-}
-
 .ptn-dots {
   background-image: radial-gradient(rgba(255,255,255,.3) 15%, transparent 15%),
     radial-gradient(rgba(255,255,255,.3) 15%, transparent 15%);
@@ -78,12 +47,6 @@
   background-color: #FFC757;
 }
 
-
-.utilityBtn {
-  all: unset;
-  cursor: pointer;
-}
-
 .modal-dialog {
   width: 360px;
  }
@@ -116,7 +79,6 @@
 
 .modal-header {
   border-bottom: 1px solid #eeeeee;
-  color: #4AAE9B;
   justify-content: space-between;
 }
 
@@ -133,21 +95,4 @@
 .modal-prepend {
   width: 150px;
   text-align: right;
-}
-
-.btn-close {
-  border: none;
-  font-size: 20px;
-  padding: 20px;
-  cursor: pointer;
-  font-weight: bold;
-  color: #4AAE9B;
-  background: transparent;
-}
-
-.btn-green {
-  color: white;
-  background: #4AAE9B;
-  border: 1px solid #4AAE9B;
-  border-radius: 2px;
 }
