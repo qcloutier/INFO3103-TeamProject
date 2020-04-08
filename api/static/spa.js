@@ -6,14 +6,14 @@ var app = new Vue({
 	el: "#app",
 
 	data: {
-		service: "https://info3103.cs.unb.ca:8046",
+		service: "https://info3103.cs.unb.ca:8037",
 
 		signin: { username: "", password: "", auth: false, error: "" },
 		signup: { first_name: "", last_name: "", dob: "", username: "", password: "", error: "" },
 
 		account: { user_id: "", first_name: "", last_name: "", dob: "", updating: false, msg: "" },
 		profile: { user_id: "", name: "", birthday: "" },
-		userSearch: { query: "", results: {}, dropdown: {} },
+		userSearch: { query: "", results: {} },
 
 		present: { present_id: "", name: "", description: "", cost: "", url: "", creating: false, updating: false, error: "" },
 		presentSearch: { query: "", results: {} }
@@ -178,6 +178,8 @@ var app = new Vue({
 					this.profile.birthday = "";
 				}
 
+				this.present.creating = false;
+				this.present.error = "";
 				this.getPresents();
 			}).catch(e => {
 				console.log(e);
@@ -214,8 +216,7 @@ var app = new Vue({
 		getPresents() {
 			axios.get(this.service +"/users/" + this.profile.user_id + "/presents?name=" + this.presentSearch.query)
 			.then(response => {
-
-				for(var i = 0; i < response.data.length; i++){
+				for (var i = 0; i < response.data.length; i++){
 					response.data[i].updating = false;
 				}
 
@@ -225,19 +226,18 @@ var app = new Vue({
 					for(var i = 0; i < response1.data.length; i++){
 						response1.data[i].updating = false;
 
-						//Iterate over first list and see if this item is present
+						// Iterate over first list and see if this item is present
 						var isUnique = true;
-						for(var j = 0; j < response.data.length; j++){
-							if(response.data[j].present_id == response1.data[i].present_id){
+						for (var j = 0; j < response.data.length; j++){
+							if (response.data[j].present_id == response1.data[i].present_id){
 								isUnique = false;
 								break;
 							}
 						}
 
-						if(isUnique){
+						if (isUnique){
 							response.data.push(response1.data[i]);
 						}
-
 					}
 
 					this.presentSearch.results = response.data;
@@ -245,7 +245,7 @@ var app = new Vue({
 					console.log(e);
 				});
 
-				for(var i = 0; i < response.data.length; i++){
+				for (var i = 0; i < response.data.length; i++){
 					response.data[i].updating = false;
 				}
 				this.presentSearch.results = response.data;

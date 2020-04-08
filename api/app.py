@@ -63,11 +63,11 @@ def internal_server_error(error):
 
 app.config['ERROR_404_HELP'] = False
 
+# Define a resource for the SPA.
+
 class SPA(Resource):
 	def get(self):
 		return app.send_static_file('spa.html')
-
-
 
 # Define the endpoints for the API.
 
