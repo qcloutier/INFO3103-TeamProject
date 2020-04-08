@@ -6,7 +6,7 @@ var app = new Vue({
 	el: "#app",
 
 	data: {
-		service: "https://info3103.cs.unb.ca:8037",
+		service: "https://info3103.cs.unb.ca:8046",
 
 		signin: { username: "", password: "", auth: false, error: "" },
 		signup: { first_name: "", last_name: "", dob: "", username: "", password: "", error: "" },
@@ -65,6 +65,7 @@ var app = new Vue({
 						console.log(e);
 					});
 
+					this.getUsers();
 					this.showProfile(response.data.user_id);
 					this.signin.auth = true;
 				}).catch(e => {
@@ -171,7 +172,8 @@ var app = new Vue({
 
 				if(response.data.dob != null){
 					var d = new Date(response.data.dob);
-					this.profile.birthday = "🎂 " + (d.getMonth()+1) + "/" + d.getDate() + "/" + d.getFullYear();
+					d.setDate(d.getDate() + 1);
+					this.profile.birthday = "🎂 " + (d.getMonth()+1) + "/" + (d.getDate()) + "/" + d.getFullYear();
 				} else {
 					this.profile.birthday = "";
 				}
@@ -201,8 +203,8 @@ var app = new Vue({
 				console.log(e);
 			});
 		},
-		userChanged() {
-			this.showProfile(this.userSearch.dropdown.id);
+		userChanged(id) {
+			this.showProfile(id);
 		},
 
 		/*
@@ -212,6 +214,37 @@ var app = new Vue({
 		getPresents() {
 			axios.get(this.service +"/users/" + this.profile.user_id + "/presents?name=" + this.presentSearch.query)
 			.then(response => {
+
+				for(var i = 0; i < response.data.length; i++){
+					response.data[i].updating = false;
+				}
+
+				axios.get(this.service +"/users/" + this.profile.user_id + "/presents?description=" + this.presentSearch.query)
+				.then(response1 => {
+
+					for(var i = 0; i < response1.data.length; i++){
+						response1.data[i].updating = false;
+
+						//Iterate over first list and see if this item is present
+						var isUnique = true;
+						for(var j = 0; j < response.data.length; j++){
+							if(response.data[j].present_id == response1.data[i].present_id){
+								isUnique = false;
+								break;
+							}
+						}
+
+						if(isUnique){
+							response.data.push(response1.data[i]);
+						}
+
+					}
+
+					this.presentSearch.results = response.data;
+				}).catch(e => {
+					console.log(e);
+				});
+
 				for(var i = 0; i < response.data.length; i++){
 					response.data[i].updating = false;
 				}
