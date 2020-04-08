@@ -63,22 +63,11 @@
         <div class="collapse navbar-collapse" id="topbar">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-              <!-- <input type="text" name="search" v-on:input="getUsers()" v-model="userSearch.query" placeholder="Find a user..."/>
-              <button class="btn btn-primary" type="button">Go</button>
-              <select id="userSearchList" v-if="userSearch.results != null" v-on:change="userChanged()" v-model="userSearch.dropdown">
-                <option v-for="curUser in userSearch.results" v-bind:value="{id: curUser.user_id}">
-                  {{curUser.first_name}} {{curUser.last_name}}
-                </option>
-              </select> -->
               <div class="dropdown">
-                  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Users
-                  </button>
-                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <a v-for="curUser in userSearch.results" class="dropdown-item" href="#" v-on:click="userChanged(curUser.user_id)">
-                        {{curUser.first_name}} {{curUser.last_name}}
-                    </a>
-                  </div>
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Users</button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                  <a v-for="curUser in userSearch.results" class="dropdown-item" href="#" v-on:click="userChanged(curUser.user_id)">{{curUser.first_name}} {{curUser.last_name}}</a>
+                </div>
               </div>
             </li>
           </ul>
