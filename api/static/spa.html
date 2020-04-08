@@ -5,7 +5,7 @@
   <title>Present Registry</title>
 </head>
 <body>
-  <div id="app" style="height: 100vh; font-family: serif; visibility: hidden">
+  <div id="app" style="height: 100vh; visibility: hidden">
 
     <!-- Sign in and sign up view -->
     <div v-if="!signin.auth">
@@ -63,13 +63,23 @@
         <div class="collapse navbar-collapse" id="topbar">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-              <input type="text" name="search" v-on:input="getUsers()" v-model="userSearch.query" placeholder="Find a user..."/>
+              <!-- <input type="text" name="search" v-on:input="getUsers()" v-model="userSearch.query" placeholder="Find a user..."/>
               <button class="btn btn-primary" type="button">Go</button>
               <select id="userSearchList" v-if="userSearch.results != null" v-on:change="userChanged()" v-model="userSearch.dropdown">
                 <option v-for="curUser in userSearch.results" v-bind:value="{id: curUser.user_id}">
                   {{curUser.first_name}} {{curUser.last_name}}
                 </option>
-              </select>
+              </select> -->
+              <div class="dropdown">
+                  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Users
+                  </button>
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a v-for="curUser in userSearch.results" class="dropdown-item" href="#" v-on:click="userChanged(curUser.user_id)">
+                        {{curUser.first_name}} {{curUser.last_name}}
+                    </a>
+                  </div>
+              </div>
             </li>
           </ul>
           <div>
@@ -80,12 +90,12 @@
       </nav>
 
       <!-- Settings modal -->
-      <modal style="min-width: 20rem; max-width: 40rem" v-if="account.updating" @close="hideUserSettings">
+      <modal v-if="account.updating" @close="hideUserSettings">
         <div slot="header" class="modal-header">
           <h4>Edit your account</h4>
         </div>
-        <div slot="body">
-          <div class="form-group col-6">
+        <div slot="body" style="max-height: 500px;">
+          <div class="form-group">
             <div class="input-group mb-3">
               <div class="input-group-prepend">
                 <span class="input-group-text  modal-prepend">First Name</span>
@@ -122,7 +132,7 @@
       <script id="modal-template" type="text/x-template">
         <transition name="modal">
           <div class="modal-backdrop">
-            <div class="modal">
+            <div class="modal" style="max-width: ">
               <header class="modal-header">
                 <slot name="header"></slot>
               </header>
@@ -226,7 +236,7 @@
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.bundle.min.js"></script>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"/>
 
   <!-- Local sources -->

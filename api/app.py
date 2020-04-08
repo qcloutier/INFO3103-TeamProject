@@ -4,7 +4,7 @@
 # together and runs the system.
 
 from flask import Flask, jsonify, make_response
-from flask_restful import Api
+from flask_restful import Api, Resource
 from flask_session import Session
 
 from login import Login
@@ -63,9 +63,17 @@ def internal_server_error(error):
 
 app.config['ERROR_404_HELP'] = False
 
+class SPA(Resource):
+	def get(self):
+		return app.send_static_file('spa.html')
+
+
+
 # Define the endpoints for the API.
 
 api = Api(app)
+
+api.add_resource(SPA, '/')
 
 api.add_resource(Login, '/login')
 
